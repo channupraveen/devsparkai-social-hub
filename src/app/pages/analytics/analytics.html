@@ -1,0 +1,135 @@
+<div class="analytics">
+  <!-- Head -->
+  <div class="page-head">
+    <div>
+      <p class="eyebrow">Overview</p>
+      <h1>Analytics</h1>
+    </div>
+
+    <div class="range-picker">
+      @for (range of ranges; track range) {
+        <button
+          class="range-btn mono"
+          type="button"
+          [class.active]="days() === range"
+          (click)="setRange(range)"
+        >
+          {{ range }}d
+        </button>
+      }
+    </div>
+  </div>
+
+  @if (isLoading()) {
+    <div class="loading">
+      <span class="spinner"></span>
+      Crunching the numbers...
+    </div>
+  } @else if (!hasData()) {
+    <div class="card empty-state">
+      <p class="eyebrow">No analytics yet</p>
+      <h3>Your performance data will appear here</h3>
+      <p>
+        Connect your social channels and publish your first post. Reach,
+        engagement, and follower growth for every channel will start showing
+        up here automatically — check back after your posts go live.
+      </p>
+      <div class="empty-actions">
+        <a class="btn btn-primary" routerLink="/social-accounts">Connect channels</a>
+        <a class="btn btn-ghost" routerLink="/create-post">Create a post</a>
+      </div>
+    </div>
+  } @else {
+    <!-- Totals -->
+    <section class="stats-grid">
+      @for (stat of totals(); track stat.key) {
+        <article class="card stat-card" [class.active]="metric() === stat.key" (click)="setMetric(stat.key)">
+          <p class="eyebrow">{{ stat.label }}</p>
+          <div class="stat-row">
+            <span class="stat-value">{{ format(stat.value) }}</span>
+            <span
+              class="stat-change"
+              [class.up]="stat.change_percent > 0"
+              [class.down]="stat.change_percent < 0"
+            >
+              {{ stat.change_percent > 0 ? '+' : '' }}{{ stat.change_percent }}%
+            </span>
+          </div>
+        </article>
+      }
+    </section>
+
+    <!-- Trend chart -->
+    <section class="card chart-panel">
+      <div class="panel-head">
+        <h3>Daily trend — last {{ days() }} days</h3>
+        <div class="metric-tabs">
+          @for (m of metrics; track m.key) {
+            <button
+              class="metric-tab"
+              type="button"
+              [class.active]="metric() === m.key"
+              (click)="setMetric(m.key)"
+            >
+              {{ m.label }}
+            </button>
+          }
+        </div>
+      </div>
+
+      <div class="chart-wrap">
+        <svg
+          [attr.viewBox]="'0 0 ' + chartW + ' ' + chartH"
+          preserveAspectRatio="none"
+          class="chart"
+        >
+          <line class="grid" x1="0" [attr.y1]="chartH / 2" [attr.x2]="chartW" [attr.y2]="chartH / 2" />
+          <line class="grid" x1="0" y1="6" [attr.x2]="chartW" y2="6" />
+          <path class="area" [attr.d]="areaPath()" />
+          <path class="line" [attr.d]="linePath()" />
+        </svg>
+
+        <div class="y-labels mono">
+          <span>{{ format(maxValue()) }}</span>
+          <span>{{ format(maxValue() / 2) }}</span>
+          <span>0</span>
+        </div>
+      </div>
+
+      <div class="x-labels mono">
+        <span>{{ xLabels().first }}</span>
+        <span>{{ xLabels().mid }}</span>
+        <span>{{ xLabels().last }}</span>
+      </div>
+    </section>
+
+    <!-- Platform breakdown -->
+    <section class="card breakdown">
+      <div class="panel-head">
+        <h3>By channel</h3>
+        <span class="mono panel-note">{{ metric() }} · last {{ days() }} days</span>
+      </div>
+
+      <ul class="platform-bars">
+        @for (p of data()!.platforms; track p.platform) {
+          <li>
+            <span class="channel-logo" [style.background]="color(p.platform)">{{ abbr(p.platform) }}</span>
+            <div class="bar-block">
+              <div class="bar-head">
+                <strong>{{ p.name }}</strong>
+                <span class="mono">{{ format(metricValue(p)) }}</span>
+              </div>
+              <div class="bar-track">
+                <div
+                  class="bar-fill"
+                  [style.width.%]="barWidth(metricValue(p))"
+                  [style.background]="color(p.platform)"
+                ></div>
+              </div>
+            </div>
+          </li>
+        }
+      </ul>
+    </section>
+  }
+</div>

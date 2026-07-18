@@ -1,0 +1,351 @@
+<div class="create-post">
+  <!-- Head -->
+  <div class="page-head">
+    <div>
+      <h1>{{ editingId() !== null ? 'Edit post' : 'Create post' }}</h1>
+    </div>
+    <div class="head-actions">
+      <button class="btn btn-ghost" type="button" [disabled]="saving()" (click)="submit('draft')">
+        {{ editingId() !== null ? 'Save changes' : 'Save draft' }}
+      </button>
+
+      <div class="schedule-wrap">
+        <button
+          class="btn btn-ghost"
+          type="button"
+          [class.active-pick]="showSchedulePicker()"
+          (click)="showSchedulePicker.set(!showSchedulePicker())"
+        >
+          Pick a time
+        </button>
+
+        @if (showSchedulePicker()) {
+          <div class="schedule-pop">
+            <input
+              class="schedule-input"
+              type="datetime-local"
+              name="scheduledAt"
+              [min]="minScheduleAt()"
+              [(ngModel)]="scheduledAt"
+            />
+            <button class="btn btn-primary" type="button" [disabled]="saving()" (click)="confirmSchedule()">
+              {{ saving() ? 'Saving...' : 'Schedule post' }}
+            </button>
+          </div>
+        }
+      </div>
+
+      <button class="btn btn-primary" type="button" [disabled]="saving()" (click)="publishNow()">
+        {{ saving() ? 'Saving...' : 'Publish now' }}
+      </button>
+    </div>
+  </div>
+
+  <div class="layout">
+    <!-- ── Main column ── -->
+    <div class="main-col">
+      <!-- AI assist -->
+      <section class="ai-assist">
+        <p class="eyebrow spark">AI Assistant</p>
+        <div class="ai-row">
+          <div class="clearable dark">
+            <input
+              type="text"
+              name="topic"
+              placeholder="Topic or blog link — e.g. 'Why hospitals need preventive maintenance'"
+              [(ngModel)]="topic"
+              (keyup.enter)="generate()"
+            />
+            @if (topic) {
+              <button class="clear-x" type="button" title="Clear" (click)="clearTopic()">×</button>
+            }
+          </div>
+          <button class="btn btn-spark" type="button" [disabled]="aiLoading()" (click)="generate()">
+            {{ aiLoading() ? 'Writing...' : 'Generate' }}
+          </button>
+        </div>
+
+      </section>
+
+      <!-- Composer -->
+      <section class="card composer">
+        <div class="clearable title-wrap">
+          <input
+            class="title-input"
+            type="text"
+            name="title"
+            placeholder="Post title"
+            [(ngModel)]="title"
+          />
+          @if (title) {
+            <button class="clear-x" type="button" title="Clear title" (click)="title = ''">×</button>
+          }
+        </div>
+
+        <!-- Publish targets -->
+        <div class="publish-chips">
+          <span class="chips-label eyebrow">Publish to</span>
+          @for (c of channels; track c.key) {
+            <button
+              class="pub-chip"
+              type="button"
+              [class.on]="isSelected(c.key)"
+              [title]="c.name + (c.limit ? ' · ' + c.limit + ' chars' : '') + (isConnectedChannel(c.key) ? ' · connected' : ' · not connected')"
+              (click)="toggle(c.key)"
+            >
+              <span class="chip-logo" [style.background]="c.color">{{ c.abbr }}</span>
+              {{ c.name }}
+              @if (isConnectedChannel(c.key)) {
+                <span class="live-dot"></span>
+              }
+            </button>
+          }
+        </div>
+
+        @if (selectedChannels().length > 1) {
+          <div class="editor-tabs">
+            @for (c of selectedChannels(); track c.key) {
+              <button
+                class="editor-tab"
+                type="button"
+                [class.active]="activeChannel() === c.key"
+                [class.over-limit]="isOver(c.key)"
+                (click)="setActive(c.key)"
+              >
+                <span class="tab-dot" [style.background]="c.color"></span>
+                <span class="tab-name">{{ c.name }}</span>
+                @if (c.limit !== null && contentFor(c.key).length > 0) {
+                  <span class="tab-count mono" [class.over]="isOver(c.key)">
+                    {{ contentFor(c.key).length }}
+                  </span>
+                }
+              </button>
+            }
+            <button class="apply-all" type="button" title="Copy this version to every selected channel" (click)="applyToAll()">
+              Apply to all
+            </button>
+          </div>
+        }
+
+        <textarea
+          class="content-input"
+          name="content"
+          rows="10"
+          [placeholder]="selectedChannels().length > 1
+            ? 'Write the ' + activeChannelName() + ' version, or generate drafts above...'
+            : 'Write your post, or generate a draft above...'"
+          [(ngModel)]="content"
+        ></textarea>
+
+        @if (variants().length > 0 || content.length > 0) {
+          <div class="refine-row">
+            <input
+              class="refine-input"
+              type="text"
+              name="refineNote"
+              [placeholder]="'Ask AI to rewrite the ' + activeChannelName() + ' version — e.g. shorter, friendlier, add stats...'"
+              [(ngModel)]="refineNote"
+              (keyup.enter)="refineActive()"
+            />
+            @if (refineNote) {
+              <button class="clear-x inline" type="button" title="Clear" (click)="refineNote = ''">×</button>
+            }
+            <button
+              class="btn btn-spark btn-xs"
+              type="button"
+              [disabled]="regenerating() !== null"
+              (click)="refineActive()"
+            >
+              {{ regenerating() === activeChannel() ? 'Writing...' : 'Rewrite with AI' }}
+            </button>
+          </div>
+        }
+
+        @if (imagePrompt(); as prompt) {
+          <div class="img-prompt">
+            <div class="img-prompt-head">
+              <p class="eyebrow">Image prompt</p>
+              <div class="img-prompt-actions">
+                @for (tool of imageTools; track tool.name) {
+                  <button class="btn btn-ghost btn-xs" type="button" [title]="'Copy prompt and open ' + tool.name" (click)="openImageTool(tool)">
+                    {{ tool.name }}
+                  </button>
+                }
+                <button class="btn btn-ghost btn-xs" type="button" (click)="copyImagePrompt()">Copy</button>
+                <button class="btn btn-ghost btn-xs" type="button" (click)="imagePrompt.set(null)">×</button>
+              </div>
+            </div>
+
+            <p class="img-prompt-text">{{ prompt }}</p>
+
+            <div class="img-tools">
+              <span class="img-tools-label mono">Style:</span>
+              @for (s of imageStyles; track s) {
+                <button
+                  class="style-chip"
+                  type="button"
+                  [class.on]="imageStyle() === s"
+                  [disabled]="imagePromptLoading()"
+                  (click)="setImageStyle(s)"
+                >
+                  {{ s }}
+                </button>
+              }
+            </div>
+          </div>
+        }
+
+        <div class="composer-foot">
+          <div class="foot-left">
+            <button class="btn btn-ghost btn-xs" type="button" (click)="copyContent()">
+              Copy
+            </button>
+            @if (content.length > 0) {
+              <button class="btn btn-ghost btn-xs danger" type="button" title="Clear this version" (click)="content = ''">
+                Clear
+              </button>
+            }
+            @if (activeChannel() === 'x') {
+              <button class="btn btn-ghost btn-xs" type="button" (click)="openPlatform()">
+                <svg class="btn-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><path d="M15 3h6v6"/><path d="M10 14L21 3"/></svg>
+                Open X with this text
+              </button>
+            }
+            <button
+              class="btn btn-ghost btn-xs"
+              type="button"
+              [disabled]="imagePromptLoading()"
+              (click)="generateImagePrompt()"
+            >
+              {{ imagePromptLoading() ? 'Thinking...' : 'Image prompt' }}
+            </button>
+            @if (overActive()) {
+              <span class="char-warn">{{ content.length - charLimit()! }} over {{ activeChannelName() }}'s limit</span>
+              <button
+                class="btn btn-spark btn-xs shorten-btn"
+                type="button"
+                [disabled]="shortening()"
+                (click)="shorten()"
+              >
+                {{ shortening() ? 'Shortening...' : 'Shorten with AI' }}
+              </button>
+            }
+          </div>
+
+          <div class="foot-right">
+            @if (charLimit() !== null) {
+              <div class="limit-bar">
+                <div
+                  class="limit-fill"
+                  [class.warn]="limitPct() > 85 && !overActive()"
+                  [class.over]="overActive()"
+                  [style.width.%]="limitPct()"
+                ></div>
+              </div>
+            }
+            <span class="char-count" [class.over]="overActive()">
+              {{ content.length }}{{ charLimit() !== null ? ' / ' + charLimit() : '' }}
+            </span>
+          </div>
+        </div>
+      </section>
+
+    </div>
+
+    <!-- ── Right rail ── -->
+    <aside class="rail">
+      <!-- Generated versions per platform -->
+      @if (variants().length > 0) {
+        <section class="variants-side">
+          <p class="eyebrow">Generated versions — pick one</p>
+          <div class="variants-scroll">
+            @for (v of variants(); track v.platform) {
+              <article
+                class="card variant"
+                [class.busy]="regenerating() === v.platform"
+                [class.selected]="activeChannel() === v.platform"
+                title="Click to open this version in the editor"
+                (click)="useVariant(v)"
+              >
+                <div class="variant-head">
+                  <span class="variant-title">
+                    <span class="tab-dot" [style.background]="channelColor(v.platform)"></span>
+                    <strong>{{ channelName(v.platform) }}</strong>
+                    <span class="variant-count mono">{{ v.content.length }} ch</span>
+                  </span>
+                  <span class="variant-actions">
+                    <button class="btn btn-ghost btn-xs" type="button" (click)="$event.stopPropagation(); copyVariant(v)">Copy</button>
+                    <button class="btn btn-ghost btn-xs" type="button" (click)="$event.stopPropagation(); useVariant(v)">Use</button>
+                  </span>
+                </div>
+
+                <p class="variant-body">{{ v.content }}</p>
+
+                @if (v.platform === 'x') {
+                  <button class="variant-open" type="button" (click)="$event.stopPropagation(); openVariantPlatform(v)">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><path d="M15 3h6v6"/><path d="M10 14L21 3"/></svg>
+                    Open X with this text
+                  </button>
+                }
+
+                <div class="variant-foot" (click)="$event.stopPropagation()">
+                  <input
+                    class="variant-note"
+                    type="text"
+                    [name]="'note-' + v.platform"
+                    placeholder="e.g. shorter, add emojis, more casual..."
+                    [(ngModel)]="notes[v.platform]"
+                    (keyup.enter)="regenerate(v.platform)"
+                  />
+                  @if (notes[v.platform]) {
+                    <button class="clear-x inline" type="button" title="Clear" (click)="notes[v.platform] = ''">×</button>
+                  }
+                  <button
+                    class="btn btn-ghost btn-xs regen-btn"
+                    type="button"
+                    [disabled]="regenerating() !== null"
+                    (click)="regenerate(v.platform)"
+                  >
+                    {{ regenerating() === v.platform ? 'Writing...' : '↻ Regenerate' }}
+                  </button>
+                </div>
+              </article>
+            }
+          </div>
+        </section>
+      } @else {
+        <section class="card rail-block">
+          <p class="eyebrow">Generated versions</p>
+          <p class="versions-hint">
+            Give the AI a topic and hit Generate — a tailored version for every
+            platform will appear here.
+          </p>
+        </section>
+      }
+
+    </aside>
+  </div>
+
+  <!-- ── Not-connected dialog ── -->
+  @if (showDraftPrompt()) {
+    <div class="modal-backdrop" (click)="closeDraftPrompt()">
+      <div class="modal" role="dialog" aria-modal="true" (click)="$event.stopPropagation()">
+        <p class="eyebrow">Not connected</p>
+        <h3>Your channels aren't connected yet</h3>
+        <p class="modal-body">
+          <strong>{{ unconnectedNames() }}</strong> {{ unconnectedNames().includes(',') ? "aren't" : "isn't" }}
+          connected in Social Accounts, so this post can't reach the real
+          platform{{ unconnectedNames().includes(',') ? 's' : '' }} yet. You can keep it as a
+          draft and publish once your accounts are linked.
+        </p>
+        <div class="modal-actions">
+          <button class="btn btn-ghost" type="button" (click)="closeDraftPrompt()">Go back</button>
+          <a class="btn btn-ghost" routerLink="/social-accounts">Connect channels</a>
+          <button class="btn btn-primary" type="button" [disabled]="saving()" (click)="confirmSaveDraft()">
+            {{ saving() ? 'Saving...' : 'Save as draft' }}
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+</div>

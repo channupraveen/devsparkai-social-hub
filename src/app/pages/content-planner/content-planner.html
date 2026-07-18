@@ -1,0 +1,182 @@
+<div class="planner">
+  <!-- Head -->
+  <div class="page-head">
+    <div>
+      <p class="eyebrow">Plan</p>
+      <h1>Content Planner</h1>
+    </div>
+  </div>
+
+  <!-- Generator -->
+  <section class="gen-panel">
+    <p class="eyebrow spark">AI Planner</p>
+    <p class="gen-sub">Never wonder what to post. One topic in, a full content plan out.</p>
+    <div class="gen-row">
+      <div class="clearable">
+        <input
+          type="text"
+          name="planTopic"
+          placeholder="Main topic — e.g. 'AI for healthcare' or 'freelancing as a developer'"
+          [(ngModel)]="topic"
+          (keyup.enter)="generate()"
+        />
+        @if (topic) {
+          <button class="clear-x" type="button" title="Clear" (click)="topic = ''">×</button>
+        }
+      </div>
+      <div class="days-pills">
+        @for (d of durations; track d) {
+          <button
+            class="day-pill"
+            type="button"
+            [class.on]="!customMode() && days === d"
+            (click)="setDays(d)"
+          >
+            {{ d }}d
+          </button>
+        }
+        <button
+          class="day-pill"
+          type="button"
+          [class.on]="customMode()"
+          (click)="enableCustom()"
+        >
+          Custom
+        </button>
+        @if (customMode()) {
+          <input
+            class="days-input"
+            type="number"
+            name="customDays"
+            min="3"
+            max="60"
+            placeholder="days"
+            [(ngModel)]="days"
+            (keyup.enter)="generate()"
+          />
+        }
+      </div>
+      <button class="btn btn-spark" type="button" [disabled]="generating()" (click)="generate()">
+        {{ generating() ? 'Planning...' : 'Generate plan' }}
+      </button>
+    </div>
+  </section>
+
+  @if (isLoading()) {
+    <div class="loading">
+      <span class="spinner"></span>
+      Loading your plans...
+    </div>
+  } @else if (plans().length === 0) {
+    <div class="card empty-state">
+      <p class="eyebrow">No plans yet</p>
+      <h3>Your content roadmap will appear here</h3>
+      <p>
+        Enter a topic above and the AI will lay out a day-by-day plan of post
+        ideas, grouped by theme. Click any idea to turn it into a real post.
+      </p>
+    </div>
+  } @else {
+    <!-- Plans as expandable topics -->
+    <div class="plan-accordions">
+      @for (p of plans(); track p.id) {
+        <section class="card plan-acc" [class.open]="activePlanId() === p.id">
+          <!-- Topic header — click to expand -->
+          <div
+            class="acc-head"
+            role="button"
+            tabindex="0"
+            (click)="toggleExpand(p)"
+            (keyup.enter)="toggleExpand(p)"
+          >
+            <span class="acc-chevron">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
+            </span>
+
+            <div class="acc-info">
+              <strong>{{ p.topic }}</strong>
+              <span class="mono">{{ p.days }}-day plan · {{ planProgress(p) }} posted · {{ p.created_at | date: 'MMM d' }}</span>
+            </div>
+
+            <div class="acc-side">
+              <div class="mini-track" [title]="planProgress(p) + ' posted'">
+                <div class="mini-fill" [style.width.%]="pct(p)"></div>
+              </div>
+              <button
+                class="btn btn-ghost btn-xs danger"
+                type="button"
+                (click)="$event.stopPropagation(); deletePlan(p)"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+
+          <!-- Expanded content -->
+          @if (activePlanId() === p.id) {
+            <div class="acc-body">
+              <div class="acc-scroll">
+                @if (useGroups()) {
+                  @for (group of groups(); track group.theme) {
+                    <div class="theme-group">
+                      <p class="eyebrow theme-title">{{ group.theme }}</p>
+
+                      @for (entry of group.items; track entry.index) {
+                        <div class="idea-row" [class.done]="entry.item.done" [class.busy]="busyIndex() === entry.index">
+                          <label class="idea-check">
+                            <input
+                              type="checkbox"
+                              [checked]="entry.item.done"
+                              (change)="toggle(entry.index, !entry.item.done)"
+                            />
+                            <span class="checkmark"></span>
+                          </label>
+                          <span class="idea-day mono">Day {{ entry.item.day }}</span>
+                          <span class="idea-title">{{ entry.item.title }}</span>
+                          <button
+                            class="btn btn-primary btn-xs idea-btn"
+                            type="button"
+                            (click)="createPost(entry.index)"
+                          >
+                            {{ entry.item.done ? 'Post again' : 'Create post' }}
+                          </button>
+                        </div>
+                      }
+                    </div>
+                  }
+                } @else {
+                  <div class="idea-list">
+                    @for (entry of flatItems(); track entry.index) {
+                      <div class="idea-row" [class.done]="entry.item.done" [class.busy]="busyIndex() === entry.index">
+                        <label class="idea-check">
+                          <input
+                            type="checkbox"
+                            [checked]="entry.item.done"
+                            (change)="toggle(entry.index, !entry.item.done)"
+                          />
+                          <span class="checkmark"></span>
+                        </label>
+                        <span class="idea-day mono">Day {{ entry.item.day }}</span>
+                        <div class="idea-main">
+                          <span class="idea-title">{{ entry.item.title }}</span>
+                          <span class="theme-chip">{{ entry.item.theme }}</span>
+                        </div>
+                        <button
+                          class="btn btn-primary btn-xs idea-btn"
+                          type="button"
+                          (click)="createPost(entry.index)"
+                        >
+                          {{ entry.item.done ? 'Post again' : 'Create post' }}
+                        </button>
+                      </div>
+                    }
+                  </div>
+                }
+              </div>
+            </div>
+          }
+        </section>
+      }
+    </div>
+  }
+</div>

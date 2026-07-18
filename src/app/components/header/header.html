@@ -1,0 +1,93 @@
+<header class="topbar">
+  <div class="search">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+    <input type="search" placeholder="Search posts, campaigns, accounts..." />
+  </div>
+
+  <div class="topbar-actions">
+    <!-- Notifications -->
+    <div class="notif-wrap">
+      <button class="icon-btn" type="button" title="Notifications" (click)="toggle()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+        @if (unread() > 0) {
+          <span class="badge">{{ unread() > 99 ? '99+' : unread() }}</span>
+        }
+      </button>
+
+      @if (open()) {
+        <div class="notif-panel">
+          <div class="notif-head">
+            <span class="notif-title">
+              <p class="eyebrow">Notifications</p>
+              @if (unread() > 0) {
+                <span class="unread-chip">{{ unread() }} new</span>
+              }
+            </span>
+            @if (unread() > 0) {
+              <button class="mark-all" type="button" (click)="markAll()">Mark all read</button>
+            }
+          </div>
+
+          <div class="notif-list">
+            @if (loading()) {
+              <p class="notif-empty">Loading...</p>
+            } @else if (items().length === 0) {
+              <div class="notif-zero">
+                <span class="zero-ring">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+                </span>
+                <p>All caught up — scheduled posts and publishing updates land here.</p>
+              </div>
+            } @else {
+              @for (n of items(); track n.id) {
+                <div
+                  class="notif-item"
+                  [class.unread]="!n.is_read"
+                  (click)="openItem(n)"
+                >
+                  <span class="type-ico" [attr.data-type]="n.type">
+                    @switch (n.type) {
+                      @case ('post_published') {
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+                      }
+                      @case ('publish_failed') {
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v4"/><path d="M12 17h.01"/><circle cx="12" cy="12" r="9"/></svg>
+                      }
+                      @case ('post_due') {
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>
+                      }
+                      @default {
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8h.01"/><path d="M11 12h1v4h1"/></svg>
+                      }
+                    }
+                  </span>
+                  <div class="notif-body">
+                    <strong>{{ n.title }}</strong>
+                    @if (n.body) {
+                      <p>{{ n.body }}</p>
+                    }
+                    <span class="notif-time mono">{{ relative(n.created_at) }}</span>
+                  </div>
+                  @if (!n.is_read) {
+                    <span class="unread-dot"></span>
+                  }
+                  <button
+                    class="notif-x"
+                    type="button"
+                    title="Dismiss"
+                    (click)="removeItem($event, n)"
+                  >×</button>
+                </div>
+              }
+            }
+          </div>
+        </div>
+      }
+    </div>
+
+    <a class="btn btn-primary" routerLink="/create-post">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" width="15" height="15"><path d="M12 5v14M5 12h14"/></svg>
+      Create Post
+    </a>
+  </div>
+</header>

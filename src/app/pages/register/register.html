@@ -1,0 +1,57 @@
+<main class="register-page">
+  <section class="register-panel">
+    <div class="brand">
+      <span class="brand-mark">DS</span>
+      <div>
+        <h1>Create account</h1>
+        <p>Start using DevSparkAI Social Hub</p>
+      </div>
+    </div>
+
+    <form class="register-form" (ngSubmit)="register()">
+      <label for="name">Full name</label>
+      <input
+        id="name"
+        name="name"
+        type="text"
+        placeholder="Your name"
+        [(ngModel)]="name"
+        required
+      />
+
+      <label for="email">Email address</label>
+      <input
+        id="email"
+        name="email"
+        type="email"
+        placeholder="you@devsparkai.com"
+        [(ngModel)]="email"
+        required
+      />
+
+      <label for="password">Password</label>
+      <input
+        id="password"
+        name="password"
+        type="password"
+        placeholder="Minimum 8 characters"
+        [(ngModel)]="password"
+        minlength="8"
+        required
+      />
+
+      <button type="submit" [disabled]="isLoading">
+        {{ isLoading ? 'Creating account...' : 'Create account' }}
+      </button>
+
+      @if (errorMessage) {
+        <p class="error-message">{{ errorMessage }}</p>
+      }
+    </form>
+
+    <p class="footer-text">
+      Already have an account?
+      <a routerLink="/login">Login</a>
+    </p>
+  </section>
+</main>

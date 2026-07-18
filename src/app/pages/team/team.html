@@ -1,0 +1,103 @@
+<div class="team">
+  <!-- Head -->
+  <div class="page-head">
+    <div>
+      <p class="eyebrow">Workspace</p>
+      <h1>Team</h1>
+    </div>
+    @if (!isLoading()) {
+      <span class="count mono">{{ members().length }} member{{ members().length === 1 ? '' : 's' }}</span>
+    }
+  </div>
+
+  @if (isLoading()) {
+    <div class="loading">
+      <span class="spinner"></span>
+      Loading your team...
+    </div>
+  } @else {
+    <!-- Invite -->
+    <section class="invite-panel">
+      <p class="eyebrow spark">Invite</p>
+      <div class="invite-row">
+        <input
+          type="email"
+          name="inviteEmail"
+          placeholder="teammate@company.com"
+          [(ngModel)]="inviteEmail"
+          (keyup.enter)="invite()"
+        />
+        <select name="inviteRole" [(ngModel)]="inviteRole">
+          @for (role of roles; track role) {
+            <option [value]="role">{{ role }}</option>
+          }
+        </select>
+        <button class="btn btn-spark" type="button" [disabled]="inviting()" (click)="invite()">
+          {{ inviting() ? 'Adding...' : 'Invite' }}
+        </button>
+      </div>
+      <p class="invite-note mono">
+        If they already have an account they're added instantly; otherwise the
+        invite links up when they register with this email.
+      </p>
+    </section>
+
+    <!-- Members -->
+    <div class="card member-table">
+      @for (member of members(); track member.id) {
+        <div class="member-row" [class.busy]="busyId() === member.id">
+          <span class="avatar" [class.owner]="member.is_owner">{{ initials(member) }}</span>
+
+          <div class="member-info">
+            <strong>
+              {{ member.name || member.email }}
+              @if (member.is_owner) {
+                <span class="you mono">you</span>
+              }
+            </strong>
+            <span class="mono">{{ member.email }}</span>
+          </div>
+
+          <div class="member-status">
+            @if (member.status === 'active') {
+              <span class="status-active mono">Active</span>
+            } @else {
+              <span class="status-invited mono">Invited</span>
+            }
+            <span class="since mono">{{ member.invited_at | date: 'MMM d, y' }}</span>
+          </div>
+
+          <div class="member-role">
+            @if (member.is_owner) {
+              <span class="role-fixed">Owner</span>
+            } @else {
+              <select
+                name="role-{{ member.id }}"
+                [ngModel]="member.role"
+                (ngModelChange)="changeRole(member, $event)"
+              >
+                @for (role of roles; track role) {
+                  <option [value]="role">{{ role }}</option>
+                }
+              </select>
+            }
+            <span class="role-blurb">{{ roleBlurb(member.role) }}</span>
+          </div>
+
+          <div class="member-actions">
+            @if (!member.is_owner) {
+              <button
+                class="btn btn-ghost btn-xs danger"
+                type="button"
+                [disabled]="busyId() === member.id"
+                (click)="remove(member)"
+              >
+                Remove
+              </button>
+            }
+          </div>
+        </div>
+      }
+    </div>
+  }
+</div>

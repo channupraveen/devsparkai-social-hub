@@ -1,0 +1,46 @@
+<main class="login-page">
+  <section class="login-panel">
+    <div class="brand">
+      <span class="brand-mark">DS</span>
+      <div>
+        <h1>Welcome back</h1>
+        <p>Login to DevSparkAI Social Hub</p>
+      </div>
+    </div>
+
+    <form class="login-form" (ngSubmit)="login()">
+      <label for="email">Email address</label>
+      <input
+        id="email"
+        name="email"
+        type="email"
+        placeholder="you@devsparkai.com"
+        [(ngModel)]="email"
+        required
+      />
+
+      <label for="password">Password</label>
+      <input
+        id="password"
+        name="password"
+        type="password"
+        placeholder="Enter your password"
+        [(ngModel)]="password"
+        required
+      />
+
+      <button type="submit" [disabled]="isLoading">
+        {{ isLoading ? 'Logging in...' : 'Login' }}
+      </button>
+
+      @if (errorMessage) {
+        <p class="error-message">{{ errorMessage }}</p>
+      }
+    </form>
+
+    <p class="footer-text">
+      New here?
+      <a routerLink="/register">Create an account</a>
+    </p>
+  </section>
+</main>

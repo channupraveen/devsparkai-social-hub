@@ -1,0 +1,241 @@
+<div class="settings">
+  <!-- Head -->
+  <div class="page-head">
+    <div>
+      <p class="eyebrow">Workspace</p>
+      <h1>Settings</h1>
+    </div>
+
+    <nav class="tab-bar">
+      @for (t of tabs; track t.key) {
+        <button
+          class="tab-btn"
+          type="button"
+          [class.active]="tab() === t.key"
+          (click)="tab.set(t.key)"
+        >
+          {{ t.label }}
+        </button>
+      }
+    </nav>
+  </div>
+
+  @if (isLoading()) {
+    <div class="loading">
+      <span class="spinner"></span>
+      Loading your settings...
+    </div>
+  } @else {
+    @if (tab() === 'account') {
+    <div class="layout">
+      <!-- ── Profile ── -->
+      <section class="card block">
+        <div class="block-head">
+          <div>
+            <h3>Profile</h3>
+            <p class="block-sub">Your name and the email you sign in with.</p>
+          </div>
+          <span class="avatar">{{ initials() }}</span>
+        </div>
+
+        <div class="field">
+          <label class="eyebrow" for="name">Name</label>
+          <input id="name" type="text" name="name" [(ngModel)]="name" />
+        </div>
+
+        <div class="field">
+          <label class="eyebrow" for="email">Email</label>
+          <input id="email" type="email" name="email" [(ngModel)]="email" />
+        </div>
+
+        @if (profile()) {
+          <p class="mono member-since">
+            member since {{ profile()!.created_at | date: 'MMM d, y' }}
+          </p>
+        }
+
+        <div class="block-foot">
+          <button
+            class="btn btn-primary"
+            type="button"
+            [disabled]="savingProfile()"
+            (click)="saveProfile()"
+          >
+            {{ savingProfile() ? 'Saving...' : 'Save changes' }}
+          </button>
+        </div>
+      </section>
+
+      <!-- ── Password ── -->
+      <section class="card block">
+        <div class="block-head">
+          <div>
+            <h3>Password</h3>
+            <p class="block-sub">Use at least 8 characters. You'll stay signed in here.</p>
+          </div>
+        </div>
+
+        <div class="field">
+          <label class="eyebrow" for="current">Current password</label>
+          <input id="current" type="password" name="currentPassword" autocomplete="current-password" [(ngModel)]="currentPassword" />
+        </div>
+
+        <div class="field">
+          <label class="eyebrow" for="new">New password</label>
+          <input id="new" type="password" name="newPassword" autocomplete="new-password" [(ngModel)]="newPassword" />
+        </div>
+
+        <div class="field">
+          <label class="eyebrow" for="confirm">Confirm new password</label>
+          <input id="confirm" type="password" name="confirmPassword" autocomplete="new-password" [(ngModel)]="confirmPassword" />
+        </div>
+
+        <div class="block-foot">
+          <button
+            class="btn btn-primary"
+            type="button"
+            [disabled]="savingPassword()"
+            (click)="savePassword()"
+          >
+            {{ savingPassword() ? 'Saving...' : 'Change password' }}
+          </button>
+        </div>
+      </section>
+    </div>
+    }
+
+    @if (tab() === 'brand') {
+      <!-- ── Brand profile ── -->
+      <section class="card block standalone">
+        <div class="block-head">
+          <div>
+            <h3>Brand &amp; content</h3>
+            <p class="block-sub">The AI writes every post for this brand — name, voice, and audience.</p>
+          </div>
+        </div>
+
+        <div class="field-row">
+          <div class="field">
+            <label class="eyebrow" for="brand-name">Brand name</label>
+            <input id="brand-name" type="text" name="brandName" placeholder="e.g. DevSpark Studio" [(ngModel)]="brandName" />
+          </div>
+
+          <div class="field">
+            <label class="eyebrow" for="brand-tone">Tone of voice</label>
+            <select id="brand-tone" name="brandTone" [(ngModel)]="brandTone">
+              @for (t of tones; track t.key) {
+                <option [value]="t.key">{{ t.label }}</option>
+              }
+            </select>
+          </div>
+        </div>
+
+        <div class="field">
+          <label class="eyebrow" for="brand-desc">What you do</label>
+          <textarea
+            id="brand-desc"
+            name="brandDescription"
+            rows="3"
+            placeholder="e.g. a software studio building AI-powered products for small businesses"
+            [(ngModel)]="brandDescription"
+          ></textarea>
+        </div>
+
+        <div class="field">
+          <label class="eyebrow" for="brand-audience">Target audience <span class="optional">(optional)</span></label>
+          <input
+            id="brand-audience"
+            type="text"
+            name="brandAudience"
+            placeholder="e.g. startup founders and marketing teams"
+            [(ngModel)]="brandAudience"
+          />
+        </div>
+
+        <div class="block-foot">
+          <button
+            class="btn btn-primary"
+            type="button"
+            [disabled]="savingBrand()"
+            (click)="saveBrand()"
+          >
+            {{ savingBrand() ? 'Saving...' : 'Save brand' }}
+          </button>
+        </div>
+      </section>
+    }
+
+    @if (tab() === 'ai') {
+      <!-- ── API keys ── -->
+      <section class="card block keys-block">
+        <div class="block-head">
+          <div>
+            <h3>AI providers</h3>
+            <p class="block-sub">Bring your own key from any provider. The active one powers post generation in Create Post.</p>
+          </div>
+        </div>
+
+        @for (p of providers; track p.key) {
+          <div class="key-row">
+            <div class="key-provider">
+              <span class="provider-logo">{{ p.abbr }}</span>
+              <div class="provider-info">
+                <strong>{{ p.label }} <span class="model mono">{{ p.model }}</span></strong>
+                @if (keyFor(p.key); as k) {
+                  <span class="mono key-masked">{{ k.masked }}</span>
+                } @else {
+                  <span class="mono key-missing">no key — get one at {{ p.hint }}</span>
+                }
+              </div>
+            </div>
+
+            @if (editingProvider() !== p.key) {
+              <div class="key-actions">
+                @if (keyFor(p.key); as k) {
+                  @if (k.is_active) {
+                    <span class="status-live mono">Active</span>
+                  } @else {
+                    <button class="btn btn-primary btn-sm" type="button" [disabled]="busyProvider() === p.key" (click)="activate(p.key)">
+                      Use
+                    </button>
+                  }
+                  <button class="btn btn-ghost btn-sm" type="button" [disabled]="testingProvider() === p.key" (click)="testKey(p.key)">
+                    {{ testingProvider() === p.key ? 'Testing...' : 'Test' }}
+                  </button>
+                  <button class="btn btn-ghost btn-sm" type="button" (click)="openEdit(p.key)">Replace</button>
+                  <button class="btn btn-ghost btn-sm danger" type="button" [disabled]="busyProvider() === p.key" (click)="removeKey(p.key)">
+                    Remove
+                  </button>
+                } @else {
+                  <button class="btn btn-ghost btn-sm" type="button" (click)="openEdit(p.key)">Add key</button>
+                }
+              </div>
+            }
+          </div>
+
+          @if (editingProvider() === p.key) {
+            <div class="key-form">
+              <input
+                type="password"
+                name="keyInput"
+                [placeholder]="p.key === 'groq' ? 'gsk_...' : p.key === 'openai' ? 'sk-...' : 'AIza...'"
+                autocomplete="off"
+                [(ngModel)]="keyInput"
+                (keyup.enter)="saveKey(p.key)"
+              />
+              <button class="btn btn-primary" type="button" [disabled]="busyProvider() === p.key" (click)="saveKey(p.key)">
+                {{ busyProvider() === p.key ? 'Saving...' : 'Save key' }}
+              </button>
+              <button class="btn btn-ghost" type="button" (click)="cancelEdit()">Cancel</button>
+            </div>
+          }
+        }
+
+        <p class="key-note mono">
+          Keys are stored encrypted server-side and only ever shown masked. No
+          key saved means generation uses the built-in templates.
+        </p>
+      </section>
+    }
+  }
+</div>

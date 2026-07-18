@@ -1,0 +1,117 @@
+<div class="dashboard">
+  <!-- Page head -->
+  <div class="page-head">
+    <div>
+      <p class="eyebrow">Overview · Last 30 days</p>
+      <h1>Good to see you, {{ firstName() }}</h1>
+    </div>
+    @if (!isLoading()) {
+      <div class="channel-readout">
+        <span class="led" [class.on]="liveCount() > 0"></span>
+        {{ liveCount() }}/{{ platforms().length }} channels live
+      </div>
+    }
+  </div>
+
+  @if (isLoading()) {
+    <div class="loading">
+      <span class="spinner"></span>
+      Loading your dashboard...
+    </div>
+  } @else {
+    <!-- Stat cards -->
+    <section class="stats-grid">
+      @for (stat of stats(); track stat.key) {
+        <article class="card stat-card">
+          <p class="eyebrow">{{ stat.label }}</p>
+          <div class="stat-row">
+            <span class="stat-value">{{ formatValue(stat.value) }}</span>
+            <span
+              class="stat-change"
+              [class.up]="stat.change_percent > 0"
+              [class.down]="stat.change_percent < 0"
+            >
+              {{ stat.change_percent > 0 ? '+' : '' }}{{ stat.change_percent }}%
+            </span>
+          </div>
+        </article>
+      }
+    </section>
+
+    <!-- AI console panel -->
+    <section class="ai-panel">
+      <div class="ai-copy">
+        <p class="eyebrow spark">AI Assistant</p>
+        <h3>Turn one idea into posts for every platform</h3>
+        <p class="ai-sub">Give it a topic or a blog link. It writes tailored versions for LinkedIn, X, and Instagram — hashtags included.</p>
+      </div>
+      <a class="btn btn-spark" routerLink="/create-post">Generate posts</a>
+    </section>
+
+    <!-- Channels + transmission log -->
+    <section class="grid-2">
+      <article class="card panel">
+        <div class="panel-head">
+          <h3>Channels</h3>
+          <a class="panel-link" routerLink="/social-accounts">Manage</a>
+        </div>
+
+        <ul class="channel-list">
+          @for (p of platforms(); track p.platform) {
+            <li class="channel-strip">
+              <span class="led" [class.on]="p.connected"></span>
+              <span class="channel-logo" [style.background]="color(p.platform)">{{ abbr(p.platform) }}</span>
+              <div class="channel-info">
+                <strong>{{ p.name }}</strong>
+                <span class="mono">{{ p.connected ? p.handle : 'offline' }}</span>
+              </div>
+              @if (p.connected) {
+                <span class="status-live">Live</span>
+              } @else {
+                <a class="btn btn-ghost btn-xs" routerLink="/social-accounts">Connect</a>
+              }
+            </li>
+          }
+        </ul>
+      </article>
+
+      <article class="card panel">
+        <div class="panel-head">
+          <h3>Recent posts</h3>
+          <a class="panel-link" routerLink="/scheduled-posts">View all</a>
+        </div>
+
+        @if (recentPosts().length === 0) {
+          <div class="empty-state">
+            <span class="empty-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2 11 13"/><path d="m22 2-7 20-4-9-9-4 20-7Z"/></svg>
+            </span>
+            <p>Nothing published yet. Write your first post and send it to every channel at once.</p>
+            <a class="btn btn-primary" routerLink="/create-post">Write your first post</a>
+          </div>
+        } @else {
+          <ul class="post-list">
+            @for (post of recentPosts(); track post.id) {
+              <li>
+                <div class="post-main">
+                  <strong>{{ post.title }}</strong>
+                  <span class="mono post-meta">
+                    {{ platformLabel(post.platforms) }}
+                    @if (post.status === 'scheduled' && post.scheduled_at) {
+                      · {{ post.scheduled_at | date: 'MMM d, HH:mm' }}
+                    } @else if (post.status === 'published' && post.published_at) {
+                      · {{ post.published_at | date: 'MMM d, HH:mm' }}
+                    } @else {
+                      · {{ post.updated_at | date: 'MMM d' }}
+                    }
+                  </span>
+                </div>
+                <span class="status-chip" [class]="'status-chip ' + post.status">{{ post.status }}</span>
+              </li>
+            }
+          </ul>
+        }
+      </article>
+    </section>
+  }
+</div>

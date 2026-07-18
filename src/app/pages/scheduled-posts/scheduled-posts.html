@@ -1,0 +1,127 @@
+<div class="scheduled-posts">
+  <!-- Head -->
+  <div class="page-head">
+    <div>
+      <p class="eyebrow">Content</p>
+      <h1>Posts</h1>
+    </div>
+    <a class="btn btn-primary" routerLink="/create-post">New post</a>
+  </div>
+
+  <!-- Tabs -->
+  <div class="tabs">
+    @for (tab of tabs; track tab.key) {
+      <button
+        class="tab"
+        type="button"
+        [class.active]="activeTab() === tab.key"
+        (click)="setTab(tab.key)"
+      >
+        {{ tab.label }}
+      </button>
+    }
+  </div>
+
+  @if (isLoading()) {
+    <div class="loading">
+      <span class="spinner"></span>
+      Loading posts...
+    </div>
+  } @else if (posts().length === 0) {
+    <div class="card empty-state">
+      <p>
+        @switch (activeTab()) {
+          @case ('scheduled') { Nothing scheduled. Posts you schedule land here, ordered by send time. }
+          @case ('draft') { No drafts. Anything you save without publishing shows up here. }
+          @case ('published') { Nothing published yet. }
+        }
+      </p>
+      <a class="btn btn-primary" routerLink="/create-post">Create a post</a>
+    </div>
+  } @else {
+    <div class="card post-table">
+      @for (post of posts(); track post.id) {
+        <div class="post-row" [class.busy]="busyId() === post.id">
+          <!-- When -->
+          <div class="when mono">
+            @if (post.status === 'scheduled') {
+              <span class="when-date" [class.overdue]="isOverdue(post)">
+                {{ post.scheduled_at | date: 'MMM d, HH:mm' }}
+              </span>
+              <span class="when-rel" [class.overdue]="isOverdue(post)">
+                {{ isOverdue(post) ? 'overdue' : relative(post.scheduled_at) }}
+              </span>
+            } @else if (post.status === 'published') {
+              <span class="when-date">{{ post.published_at | date: 'MMM d, HH:mm' }}</span>
+              <span class="when-rel">{{ relative(post.published_at) }}</span>
+            } @else {
+              <span class="when-date">{{ post.updated_at | date: 'MMM d' }}</span>
+              <span class="when-rel">draft</span>
+            }
+          </div>
+
+          <!-- What -->
+          <div class="what clickable" title="Open in editor" (click)="edit(post)">
+            <strong>{{ post.title }}</strong>
+            @if (post.content) {
+              <span class="preview">{{ post.content }}</span>
+            }
+          </div>
+
+          <!-- Channels -->
+          <div class="channels">
+            @for (p of post.platforms; track p) {
+              <span class="channel-dot" [style.background]="color(p)" [title]="p">{{ abbr(p) }}</span>
+            }
+          </div>
+
+          <!-- Actions -->
+          <div class="actions">
+            @if (rescheduling() === post.id) {
+              <input
+                class="reschedule-input"
+                type="datetime-local"
+                name="newDate"
+                [min]="minScheduleAt()"
+                [(ngModel)]="newDate"
+              />
+              <button
+                class="btn btn-primary btn-xs"
+                type="button"
+                [disabled]="busyId() === post.id"
+                (click)="confirmReschedule(post)"
+              >
+                Save
+              </button>
+              <button class="btn btn-ghost btn-xs" type="button" (click)="rescheduling.set(null)">
+                Cancel
+              </button>
+            } @else {
+              @if (post.status === 'scheduled') {
+                <button class="btn btn-primary btn-xs" type="button" [disabled]="busyId() === post.id" (click)="publishNow(post)">
+                  Publish now
+                </button>
+                <button class="btn btn-ghost btn-xs" type="button" (click)="openReschedule(post)">
+                  Reschedule
+                </button>
+                <button class="btn btn-ghost btn-xs" type="button" [disabled]="busyId() === post.id" (click)="cancel(post)">
+                  Cancel
+                </button>
+              } @else if (post.status === 'draft') {
+                <button class="btn btn-primary btn-xs" type="button" [disabled]="busyId() === post.id" (click)="publishNow(post)">
+                  Publish now
+                </button>
+                <button class="btn btn-ghost btn-xs" type="button" (click)="openReschedule(post)">
+                  Schedule
+                </button>
+              }
+              <button class="btn btn-ghost btn-xs danger" type="button" [disabled]="busyId() === post.id" (click)="remove(post)">
+                Delete
+              </button>
+            }
+          </div>
+        </div>
+      }
+    </div>
+  }
+</div>

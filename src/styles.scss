@@ -1,1 +1,150 @@
-/* You can add global styles to this file, and also import other style files */
+/* ── DevSparkAI Social Hub — design system ─────────────────────────
+   Concept: broadcast console. Compose once, transmit to every channel.
+   Ink surfaces, one spark-yellow accent, signal-green only for "live". */
+
+:root {
+  /* Core */
+  --ink: #101418;
+  --ink-2: #1a2027;
+  --paper: #eef1f4;
+  --card: #ffffff;
+
+  /* Accent */
+  --spark: #ffd338;
+  --spark-deep: #eab308;
+
+  /* Status — signal green is reserved for live/connected */
+  --signal: #2fbf71;
+  --danger: #e5484d;
+  --warn: #d97706;
+
+  /* Text */
+  --text-primary: #14181d;
+  --text-secondary: #5c6470;
+  --text-muted: #8b93a0;
+  --text-on-ink: #e8ebee;
+  --text-on-ink-muted: #7d8590;
+
+  /* Structure */
+  --border: #dde2e8;
+  --border-ink: rgba(255, 255, 255, 0.09);
+  --radius: 10px;
+  --radius-sm: 7px;
+
+  /* Type */
+  --font-ui: 'Space Grotesk', -apple-system, 'Segoe UI', sans-serif;
+  --font-mono: 'IBM Plex Mono', 'Consolas', monospace;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+}
+
+body {
+  font-family: var(--font-ui);
+  background: var(--paper);
+  color: var(--text-primary);
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3, h4 {
+  margin: 0;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button {
+  font-family: inherit;
+}
+
+/* ── Shared primitives ── */
+
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+/* Mono eyebrow label — console section marker */
+.eyebrow {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 16px;
+  border-radius: var(--radius-sm);
+  border: 1px solid transparent;
+  font-family: var(--font-ui);
+  font-size: 13.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+
+  /* Primary: ink chip, spark text. Inverts on hover. */
+  &.btn-primary {
+    background: var(--ink);
+    color: var(--spark);
+
+    &:hover {
+      background: var(--spark);
+      color: var(--ink);
+    }
+  }
+
+  /* Spark: for CTAs sitting on ink surfaces */
+  &.btn-spark {
+    background: var(--spark);
+    color: var(--ink);
+
+    &:hover {
+      background: #ffdf66;
+    }
+  }
+
+  &.btn-ghost {
+    background: transparent;
+    color: var(--text-secondary);
+    border-color: var(--border);
+
+    &:hover {
+      border-color: var(--ink);
+      color: var(--ink);
+    }
+  }
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #c3cad2;
+  border-radius: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}

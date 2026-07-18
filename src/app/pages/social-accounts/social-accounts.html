@@ -1,0 +1,97 @@
+<div class="social-accounts">
+  <!-- Head -->
+  <div class="page-head">
+    <div>
+      <p class="eyebrow">Workspace</p>
+      <h1>Social accounts</h1>
+    </div>
+    @if (!isLoading()) {
+      <div class="channel-readout">
+        <span class="led" [class.on]="liveCount() > 0"></span>
+        {{ liveCount() }}/{{ accounts().length }} channels live
+      </div>
+    }
+  </div>
+
+  @if (isLoading()) {
+    <div class="loading">
+      <span class="spinner"></span>
+      Loading your channels...
+    </div>
+  } @else {
+    <div class="account-grid">
+      @for (account of accounts(); track account.platform) {
+        <article class="card account-card">
+          <div class="account-top">
+            <span class="channel-logo" [style.background]="color(account.platform)">
+              {{ abbr(account.platform) }}
+            </span>
+            <div class="account-title">
+              <strong>{{ account.name }}</strong>
+              <span class="mono">
+                {{ account.connected ? account.handle : 'offline' }}
+              </span>
+            </div>
+            <span class="led" [class.on]="account.connected"></span>
+          </div>
+
+          <p class="account-blurb">{{ blurb(account.platform) }}</p>
+
+          @if (connecting() === account.platform) {
+            <div class="connect-form">
+              <input
+                type="text"
+                name="handle"
+                placeholder="@yourhandle"
+                [(ngModel)]="handle"
+                (keyup.enter)="confirmConnect(account.platform)"
+              />
+              <div class="connect-actions">
+                <button
+                  class="btn btn-primary btn-sm"
+                  type="button"
+                  [disabled]="busyPlatform() === account.platform"
+                  (click)="confirmConnect(account.platform)"
+                >
+                  {{ busyPlatform() === account.platform ? 'Connecting...' : 'Confirm' }}
+                </button>
+                <button class="btn btn-ghost btn-sm" type="button" (click)="cancelConnect()">
+                  Cancel
+                </button>
+              </div>
+            </div>
+          } @else {
+            <div class="account-foot">
+              @if (account.connected) {
+                <span class="status-live">Live</span>
+                <button
+                  class="btn btn-ghost btn-sm danger"
+                  type="button"
+                  [disabled]="busyPlatform() === account.platform"
+                  (click)="disconnect(account)"
+                >
+                  {{ busyPlatform() === account.platform ? 'Working...' : 'Disconnect' }}
+                </button>
+              } @else {
+                <span class="mono">not connected</span>
+                <button
+                  class="btn btn-primary btn-sm"
+                  type="button"
+                  (click)="openConnect(account.platform)"
+                >
+                  Connect
+                </button>
+              }
+            </div>
+          }
+        </article>
+      }
+    </div>
+
+    <p class="oauth-note mono">
+      Note: connections currently store your handle. Full OAuth publishing per
+      platform (LinkedIn, X, Meta APIs) plugs in here later — this screen and
+      the data model are already shaped for it.
+    </p>
+  }
+</div>
