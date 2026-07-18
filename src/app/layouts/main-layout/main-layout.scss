@@ -1,6 +1,7 @@
 .shell {
   display: flex;
   min-height: 100vh;
+  min-height: 100dvh;
 }
 
 .main {
@@ -13,4 +14,38 @@
 .content {
   flex: 1;
   padding: 26px 28px;
+}
+
+/* backdrop behind the mobile drawer */
+.scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 110;
+  background: rgba(16, 20, 24, 0.5);
+  -webkit-backdrop-filter: blur(2px);
+  backdrop-filter: blur(2px);
+  animation: scrim-in 0.2s ease;
+}
+
+@keyframes scrim-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@media (min-width: 1025px) {
+  .scrim {
+    display: none;
+  }
+}
+
+@media (max-width: 1024px) {
+  .content {
+    padding: 20px;
+  }
+}
+
+@media (max-width: 640px) {
+  .content {
+    padding: 14px 14px 24px;
+  }
 }

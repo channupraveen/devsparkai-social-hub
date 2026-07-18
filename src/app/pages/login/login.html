@@ -1,46 +1,80 @@
-<main class="login-page">
-  <section class="login-panel">
-    <div class="brand">
-      <span class="brand-mark">DS</span>
-      <div>
-        <h1>Welcome back</h1>
-        <p>Login to DevSparkAI Social Hub</p>
+<main class="auth-page">
+  <div class="auth-box">
+    <header class="auth-head">
+      <div class="brand">
+        <svg class="brand-logo" viewBox="0 0 64 64" fill="none" aria-hidden="true">
+          <path
+            d="M32 6C33.9 19.2 44.8 30.1 58 32C44.8 33.9 33.9 44.8 32 58C30.1 44.8 19.2 33.9 6 32C19.2 30.1 30.1 19.2 32 6Z"
+            stroke="#E2532D"
+            stroke-width="3.5"
+            stroke-linejoin="round"
+          />
+        </svg>
+        <div class="brand-text">
+          <span class="brand-name">DevSpark <em>AI</em></span>
+          <span class="brand-product">SocialHub</span>
+        </div>
       </div>
+      <span class="status">
+        <span class="status-dot"></span>
+        Console ready
+      </span>
+    </header>
+
+    <div class="auth-body">
+      <p class="eyebrow">Sign in</p>
+      <h1>Welcome back</h1>
+      <p class="lede">Enter your details to access your workspace.</p>
+
+      <form class="auth-form" (ngSubmit)="login()">
+        <div class="field">
+          <label for="email">Email address</label>
+          <input
+            id="email"
+            name="email"
+            type="email"
+            placeholder="you@devsparkai.com"
+            [(ngModel)]="email"
+            autocomplete="email"
+            required
+          />
+        </div>
+
+        <div class="field">
+          <div class="label-row">
+            <label for="password">Password</label>
+            <button
+              type="button"
+              class="peek"
+              (click)="showPassword = !showPassword"
+            >
+              {{ showPassword ? 'Hide' : 'Show' }}
+            </button>
+          </div>
+          <input
+            id="password"
+            name="password"
+            [type]="showPassword ? 'text' : 'password'"
+            placeholder="Enter your password"
+            [(ngModel)]="password"
+            autocomplete="current-password"
+            required
+          />
+        </div>
+
+        @if (errorMessage) {
+          <p class="error-message">{{ errorMessage }}</p>
+        }
+
+        <button type="submit" class="submit-btn" [disabled]="isLoading">
+          {{ isLoading ? 'Signing in…' : 'Sign in' }}
+        </button>
+      </form>
     </div>
 
-    <form class="login-form" (ngSubmit)="login()">
-      <label for="email">Email address</label>
-      <input
-        id="email"
-        name="email"
-        type="email"
-        placeholder="you@devsparkai.com"
-        [(ngModel)]="email"
-        required
-      />
-
-      <label for="password">Password</label>
-      <input
-        id="password"
-        name="password"
-        type="password"
-        placeholder="Enter your password"
-        [(ngModel)]="password"
-        required
-      />
-
-      <button type="submit" [disabled]="isLoading">
-        {{ isLoading ? 'Logging in...' : 'Login' }}
-      </button>
-
-      @if (errorMessage) {
-        <p class="error-message">{{ errorMessage }}</p>
-      }
-    </form>
-
-    <p class="footer-text">
+    <footer class="auth-foot">
       New here?
       <a routerLink="/register">Create an account</a>
-    </p>
-  </section>
+    </footer>
+  </div>
 </main>

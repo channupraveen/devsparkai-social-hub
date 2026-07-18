@@ -1,4 +1,4 @@
-<aside class="sidebar">
+<aside class="sidebar" [class.open]="layout.sidebarOpen()">
   <div class="brand">
     <span class="brand-mark">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
@@ -9,6 +9,14 @@
       <strong>DevSparkAI</strong>
       <span>Social Hub</span>
     </div>
+    <button
+      class="drawer-close"
+      type="button"
+      title="Close menu"
+      (click)="layout.closeSidebar()"
+    >
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+    </button>
   </div>
 
   <nav class="nav">
@@ -21,6 +29,7 @@
             class="nav-link"
             [routerLink]="item.route"
             routerLinkActive="active"
+            (click)="layout.closeSidebar()"
           >
             <span class="nav-icon">
               @switch (item.icon) {

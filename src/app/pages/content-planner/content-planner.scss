@@ -111,6 +111,7 @@
 .days-pills {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 4px;
   padding: 4px;
   border: 1px solid var(--border-ink);
@@ -484,4 +485,72 @@
 .btn-ghost.danger:hover {
   border-color: var(--danger);
   color: var(--danger);
+}
+
+/* ── Mobile layout ── */
+@media (max-width: 700px) {
+  .gen-panel {
+    padding: 16px;
+  }
+
+  .gen-row .btn-spark {
+    justify-content: center;
+  }
+
+  .acc-head {
+    gap: 10px;
+    padding: 13px 14px;
+  }
+
+  /* let the topic wrap to two lines instead of truncating hard */
+  .acc-info strong {
+    white-space: normal;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+  }
+
+  .acc-scroll {
+    padding: 4px 12px 14px;
+    max-height: 60vh;
+  }
+
+  /* Idea rows: two-line grid —
+     line 1: checkbox · day · action
+     line 2: full-width title */
+  .idea-row {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    grid-template-areas:
+      'check day btn'
+      'title title title';
+    row-gap: 8px;
+    align-items: center;
+    padding: 12px 8px;
+  }
+
+  .idea-check {
+    grid-area: check;
+  }
+
+  .idea-day {
+    grid-area: day;
+    width: auto;
+  }
+
+  .idea-title,
+  .idea-main {
+    grid-area: title;
+  }
+
+  .idea-btn {
+    grid-area: btn;
+    justify-self: end;
+  }
+}
+
+@media (max-width: 400px) {
+  .day-pill {
+    padding: 7px 10px;
+  }
 }

@@ -2,6 +2,7 @@ import { Component, OnInit, inject, signal } from '@angular/core';
 import { Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { Auth, AuthUser } from '../../services/auth';
 import { Toast } from '../../services/toast';
+import { LayoutState } from '../../services/layout';
 
 interface NavItem {
   label: string;
@@ -24,6 +25,7 @@ export class Sidebar implements OnInit {
   private auth = inject(Auth);
   private router = inject(Router);
   private toast = inject(Toast);
+  readonly layout = inject(LayoutState);
 
   readonly user = signal<AuthUser | null>(null);
 

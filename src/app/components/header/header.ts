@@ -14,6 +14,7 @@ import {
   NotificationsApi,
 } from '../../services/notifications';
 import { Toast } from '../../services/toast';
+import { LayoutState } from '../../services/layout';
 
 @Component({
   selector: 'app-header',
@@ -24,6 +25,7 @@ import { Toast } from '../../services/toast';
 export class Header implements OnInit, OnDestroy {
   private api = inject(NotificationsApi);
   private toast = inject(Toast);
+  readonly layout = inject(LayoutState);
   private router = inject(Router);
   private host = inject(ElementRef);
 

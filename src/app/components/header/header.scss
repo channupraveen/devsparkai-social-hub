@@ -12,6 +12,41 @@
   z-index: 50;
 }
 
+.icon-btn.menu-btn {
+  display: none;
+  flex-shrink: 0;
+}
+
+@media (max-width: 1024px) {
+  .topbar {
+    gap: 12px;
+    padding: 0 16px;
+  }
+
+  .icon-btn.menu-btn {
+    display: grid;
+  }
+}
+
+@media (max-width: 640px) {
+  .topbar {
+    gap: 10px;
+    padding: 0 12px;
+  }
+
+  .topbar .search {
+    max-width: none;
+  }
+
+  .create-label {
+    display: none;
+  }
+
+  .btn.create-btn {
+    padding: 9px 11px;
+  }
+}
+
 .search {
   display: flex;
   align-items: center;
@@ -111,6 +146,15 @@
   z-index: 90;
   width: 360px;
   max-width: calc(100vw - 40px);
+
+  @media (max-width: 640px) {
+    position: fixed;
+    top: 66px;
+    left: 12px;
+    right: 12px;
+    width: auto;
+    max-width: none;
+  }
   border: 1px solid var(--border);
   border-radius: var(--radius);
   background: var(--card);

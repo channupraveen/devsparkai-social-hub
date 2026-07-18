@@ -16,6 +16,7 @@ export class Register {
   password = '';
   isLoading = false;
   errorMessage = '';
+  showPassword = false;
 
   constructor(
     private auth: Auth,
