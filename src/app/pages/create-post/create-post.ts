@@ -1,4 +1,4 @@
-import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { Component, HostListener, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 
@@ -60,6 +60,9 @@ export class CreatePost implements OnInit {
   topic = '';
   mode: 'now' | 'schedule' = 'now';
   scheduledAt = '';
+  // Split picker fields — combined into scheduledAt on confirm
+  scheduleDate = '';
+  scheduleTime = '09:00';
 
   readonly selected = signal<Set<string>>(new Set(['linkedin', 'x']));
   readonly activeChannel = signal<string>('linkedin');
@@ -119,6 +122,22 @@ export class CreatePost implements OnInit {
   readonly selectedChannels = computed(() =>
     this.channels.filter((c) => this.selected().has(c.key)),
   );
+
+  /** Close the schedule popover on outside click or Escape. */
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: MouseEvent): void {
+    if (
+      this.showSchedulePicker() &&
+      !(event.target as HTMLElement).closest('.schedule-wrap')
+    ) {
+      this.showSchedulePicker.set(false);
+    }
+  }
+
+  @HostListener('document:keydown.escape')
+  onEscape(): void {
+    if (this.showSchedulePicker()) this.showSchedulePicker.set(false);
+  }
 
   ngOnInit(): void {
     const idParam = this.route.snapshot.queryParamMap.get('id');
@@ -199,6 +218,9 @@ export class CreatePost implements OnInit {
         if (post.status === 'scheduled' && post.scheduled_at) {
           this.mode = 'schedule';
           this.scheduledAt = this.toLocalInput(new Date(post.scheduled_at));
+          const [d, t] = this.scheduledAt.split('T');
+          this.scheduleDate = d;
+          this.scheduleTime = t;
         }
       },
       error: () => {
@@ -216,6 +238,63 @@ export class CreatePost implements OnInit {
   /** Earliest pickable schedule time — blocks past dates in the picker. */
   minScheduleAt(): string {
     return this.toLocalInput(new Date());
+  }
+
+  minDate(): string {
+    return this.toLocalInput(new Date()).split('T')[0];
+  }
+
+  /** Quick scheduling shortcuts — only future ones are offered. */
+  schedulePresets(): { label: string; date: string; time: string }[] {
+    const now = new Date();
+    const mk = (d: Date, label: string) => {
+      const [date, time] = this.toLocalInput(d).split('T');
+      return { label, date, time };
+    };
+
+    const in1h = new Date(now.getTime() + 60 * 60 * 1000);
+    in1h.setMinutes(0, 0, 0);
+    in1h.setHours(in1h.getHours() + 1);
+
+    const tonight = new Date(now);
+    tonight.setHours(19, 0, 0, 0);
+
+    const tomorrow = new Date(now);
+    tomorrow.setDate(now.getDate() + 1);
+    tomorrow.setHours(9, 0, 0, 0);
+
+    const monday = new Date(now);
+    const diff = (8 - monday.getDay()) % 7 || 7;
+    monday.setDate(now.getDate() + diff);
+    monday.setHours(9, 0, 0, 0);
+
+    return [
+      mk(in1h, 'In 1 hour'),
+      mk(tonight, 'Tonight 19:00'),
+      mk(tomorrow, 'Tomorrow 09:00'),
+      mk(monday, 'Monday 09:00'),
+    ].filter((p) => new Date(`${p.date}T${p.time}`).getTime() > now.getTime());
+  }
+
+  applyPreset(p: { date: string; time: string }): void {
+    this.scheduleDate = p.date;
+    this.scheduleTime = p.time;
+  }
+
+  isPresetActive(p: { date: string; time: string }): boolean {
+    return this.scheduleDate === p.date && this.scheduleTime === p.time;
+  }
+
+  /** “Sat, Jul 25 · 09:00” preview under the fields. */
+  scheduleSummary(): string | null {
+    if (!this.scheduleDate || !this.scheduleTime) return null;
+    const d = new Date(`${this.scheduleDate}T${this.scheduleTime}`);
+    if (Number.isNaN(d.getTime())) return null;
+    return (
+      d.toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' }) +
+      ' · ' +
+      this.scheduleTime
+    );
   }
 
   /** Character limit of the channel currently being edited. */
@@ -277,6 +356,25 @@ export class CreatePost implements OnInit {
 
   setActive(key: string): void {
     this.activeChannel.set(key);
+  }
+
+  /** Single-bar behavior: off → select + edit; selected → edit; active → remove. */
+  chipClick(key: string): void {
+    if (!this.isSelected(key)) {
+      this.selected.update((set) => new Set(set).add(key));
+      this.activeChannel.set(key);
+    } else if (this.activeChannel() !== key) {
+      this.activeChannel.set(key);
+    } else {
+      this.toggle(key);
+    }
+  }
+
+  chipTitle(c: ChannelOption): string {
+    const limit = c.limit ? ` · ${c.limit} chars` : '';
+    if (!this.isSelected(c.key)) return `Add ${c.name}${limit}`;
+    if (this.activeChannel() !== c.key) return `Edit the ${c.name} version${limit}`;
+    return `Editing ${c.name} — click again to remove it${limit}`;
   }
 
   channelName(key: string): string {
@@ -342,9 +440,13 @@ export class CreatePost implements OnInit {
           );
         }
       },
-      error: () => {
+      error: (error) => {
         this.aiLoading.set(false);
-        this.toast.error('Generation failed. Try again.', 'AI Assistant');
+        const detail =
+          typeof error.error?.detail === 'string'
+            ? error.error.detail
+            : 'Generation failed. Try again.';
+        this.toast.error(detail, 'AI Assistant');
       },
     });
   }
@@ -387,9 +489,13 @@ export class CreatePost implements OnInit {
           );
         }
       },
-      error: () => {
+      error: (error) => {
         this.regenerating.set(null);
-        this.toast.error('Regeneration failed. Try again.', 'AI Assistant');
+        const detail =
+          typeof error.error?.detail === 'string'
+            ? error.error.detail
+            : 'Regeneration failed. Try again.';
+        this.toast.error(detail, 'AI Assistant');
       },
     });
   }
@@ -502,9 +608,13 @@ export class CreatePost implements OnInit {
         this.imagePrompt.set(res.prompt);
         if (res.note) this.toast.warning(res.note, 'Image prompt');
       },
-      error: () => {
+      error: (error) => {
         this.imagePromptLoading.set(false);
-        this.toast.error('Could not create the image prompt.', 'Image prompt');
+        const detail =
+          typeof error.error?.detail === 'string'
+            ? error.error.detail
+            : 'Could not create the image prompt.';
+        this.toast.error(detail, 'Image prompt');
       },
     });
   }
@@ -556,10 +666,16 @@ export class CreatePost implements OnInit {
   }
 
   confirmSchedule(): void {
-    if (!this.scheduledAt) {
+    if (!this.scheduleDate || !this.scheduleTime) {
       this.toast.warning('Pick a date and time first.');
       return;
     }
+    const when = new Date(`${this.scheduleDate}T${this.scheduleTime}`);
+    if (Number.isNaN(when.getTime()) || when.getTime() <= Date.now()) {
+      this.toast.warning('That time is in the past — pick a future date and time.');
+      return;
+    }
+    this.scheduledAt = `${this.scheduleDate}T${this.scheduleTime}`;
     this.mode = 'schedule';
     this.showSchedulePicker.set(false);
     this.submit('publish');

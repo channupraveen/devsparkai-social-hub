@@ -261,3 +261,128 @@
     white-space: nowrap;
   }
 }
+
+/* ── Tablet ── */
+@media (max-width: 980px) {
+  .content-calendar {
+    /* still fill the screen instead of collapsing to a small block */
+    height: calc(100dvh - 150px);
+    min-height: 460px;
+    overflow: hidden;
+  }
+}
+
+/* ── Mobile: compact, full-height calendar ── */
+@media (max-width: 640px) {
+  .content-calendar {
+    height: calc(100dvh - 130px);
+    gap: 10px;
+  }
+
+  .page-head {
+    gap: 10px;
+
+    h1 {
+      font-size: 19px;
+      margin-top: 2px;
+    }
+  }
+
+  .head-controls {
+    width: 100%;
+    justify-content: space-between;
+    gap: 10px;
+  }
+
+  .legend {
+    gap: 10px;
+    font-size: 10.5px;
+  }
+
+  .month-nav {
+    gap: 6px;
+  }
+
+  .month-label {
+    min-width: 0;
+    font-size: 13px;
+    white-space: nowrap;
+  }
+
+  .nav-btn {
+    width: 32px;
+    height: 32px;
+  }
+
+  /* Weekday initials only — "MON" doesn't fit 7-up on a phone */
+  .weekday {
+    padding: 6px 0;
+    text-align: center;
+    font-size: 9.5px;
+    letter-spacing: 0.04em;
+    overflow: hidden;
+    white-space: nowrap;
+  }
+
+  .day-cell {
+    padding: 4px 3px;
+    gap: 3px;
+    align-items: center;
+  }
+
+  .day-number {
+    font-size: 11px;
+
+    &.today-badge {
+      padding: 1px 5px;
+    }
+  }
+
+  /* Chips collapse to colored dots — titles never fit in a phone cell */
+  .day-posts {
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 3px;
+  }
+
+  .post-chip {
+    width: 6px;
+    height: 6px;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    gap: 0;
+    overflow: hidden;
+
+    &.scheduled {
+      background: var(--warn);
+    }
+
+    &.published {
+      background: var(--signal);
+    }
+  }
+
+  .chip-time,
+  .chip-title {
+    display: none;
+  }
+
+  .more {
+    font-size: 9px;
+    padding: 0;
+  }
+
+  .empty-note {
+    flex-direction: column;
+    align-items: stretch;
+    text-align: center;
+    gap: 10px;
+    padding: 14px;
+
+    .btn {
+      justify-content: center;
+    }
+  }
+}

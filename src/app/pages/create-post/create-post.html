@@ -21,14 +21,37 @@
 
         @if (showSchedulePicker()) {
           <div class="schedule-pop">
-            <input
-              class="schedule-input"
-              type="datetime-local"
-              name="scheduledAt"
-              [min]="minScheduleAt()"
-              [(ngModel)]="scheduledAt"
-            />
-            <button class="btn btn-primary" type="button" [disabled]="saving()" (click)="confirmSchedule()">
+            <p class="eyebrow sched-label">Schedule for</p>
+
+            <div class="preset-row">
+              @for (p of schedulePresets(); track p.label) {
+                <button
+                  class="preset-chip"
+                  type="button"
+                  [class.on]="isPresetActive(p)"
+                  (click)="applyPreset(p)"
+                >
+                  {{ p.label }}
+                </button>
+              }
+            </div>
+
+            <div class="dt-row">
+              <label class="dt-field">
+                <span class="eyebrow">Date</span>
+                <input type="date" name="schedDate" [min]="minDate()" [(ngModel)]="scheduleDate" />
+              </label>
+              <label class="dt-field">
+                <span class="eyebrow">Time</span>
+                <input type="time" name="schedTime" [(ngModel)]="scheduleTime" />
+              </label>
+            </div>
+
+            @if (scheduleSummary(); as summary) {
+              <p class="sched-summary mono">{{ summary }}</p>
+            }
+
+            <button class="btn btn-primary sched-confirm" type="button" [disabled]="saving()" (click)="confirmSchedule()">
               {{ saving() ? 'Saving...' : 'Schedule post' }}
             </button>
           </div>
@@ -88,50 +111,31 @@
           }
         </div>
 
-        <!-- Publish targets -->
-        <div class="publish-chips">
-          <span class="chips-label eyebrow">Publish to</span>
+        <!-- One bar: pick channels + switch versions -->
+        <div class="channel-bar">
           @for (c of channels; track c.key) {
             <button
-              class="pub-chip"
+              class="ch-chip"
               type="button"
               [class.on]="isSelected(c.key)"
-              [title]="c.name + (c.limit ? ' · ' + c.limit + ' chars' : '') + (isConnectedChannel(c.key) ? ' · connected' : ' · not connected')"
-              (click)="toggle(c.key)"
+              [class.active]="isSelected(c.key) && activeChannel() === c.key"
+              [class.over-limit]="isSelected(c.key) && isOver(c.key)"
+              [title]="chipTitle(c)"
+              (click)="chipClick(c.key)"
             >
               <span class="chip-logo" [style.background]="c.color">{{ c.abbr }}</span>
               {{ c.name }}
-              @if (isConnectedChannel(c.key)) {
-                <span class="live-dot"></span>
+              @if (isSelected(c.key) && c.limit !== null && contentFor(c.key).length > 0) {
+                <span class="chip-count mono" [class.over]="isOver(c.key)">{{ contentFor(c.key).length }}</span>
               }
             </button>
           }
-        </div>
-
-        @if (selectedChannels().length > 1) {
-          <div class="editor-tabs">
-            @for (c of selectedChannels(); track c.key) {
-              <button
-                class="editor-tab"
-                type="button"
-                [class.active]="activeChannel() === c.key"
-                [class.over-limit]="isOver(c.key)"
-                (click)="setActive(c.key)"
-              >
-                <span class="tab-dot" [style.background]="c.color"></span>
-                <span class="tab-name">{{ c.name }}</span>
-                @if (c.limit !== null && contentFor(c.key).length > 0) {
-                  <span class="tab-count mono" [class.over]="isOver(c.key)">
-                    {{ contentFor(c.key).length }}
-                  </span>
-                }
-              </button>
-            }
+          @if (selectedChannels().length > 1) {
             <button class="apply-all" type="button" title="Copy this version to every selected channel" (click)="applyToAll()">
               Apply to all
             </button>
-          </div>
-        }
+          }
+        </div>
 
         <textarea
           class="content-input"

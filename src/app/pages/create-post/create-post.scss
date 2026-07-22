@@ -51,23 +51,103 @@
   right: 0;
   z-index: 60;
   display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 10px;
+  flex-direction: column;
+  gap: 12px;
+  width: 288px;
+  padding: 14px;
   border: 1px solid var(--border);
   border-radius: var(--radius);
   background: var(--card);
   box-shadow: 0 12px 32px rgba(0, 0, 0, 0.12);
   animation: pop-in 0.15s ease;
 
-  .schedule-input {
-    width: 210px;
+  .sched-label {
     margin: 0;
   }
 
   .btn {
     white-space: nowrap;
   }
+}
+
+.preset-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.preset-chip {
+  padding: 6px 11px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--card);
+  font-family: var(--font-ui);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.12s ease;
+
+  &:hover {
+    border-color: var(--text-muted);
+    color: var(--text-primary);
+  }
+
+  &.on {
+    background: var(--ink);
+    border-color: var(--ink);
+    color: var(--spark);
+    font-weight: 600;
+  }
+}
+
+.dt-row {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr;
+  gap: 8px;
+}
+
+.dt-field {
+  display: grid;
+  gap: 4px;
+
+  .eyebrow {
+    margin: 0;
+  }
+
+  input {
+    height: 40px;
+    padding: 0 10px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--card);
+    color: var(--text-primary);
+    font-family: var(--font-ui);
+    font-size: 13px;
+    outline: none;
+    width: 100%;
+    box-sizing: border-box;
+
+    &:focus {
+      border-color: var(--ink);
+      box-shadow: 0 0 0 3px rgba(255, 211, 56, 0.3);
+    }
+  }
+}
+
+.sched-summary {
+  margin: 0;
+  padding: 8px 12px;
+  border-radius: var(--radius-sm);
+  background: var(--paper);
+  border: 1px solid var(--border);
+  font-size: 11.5px;
+  color: var(--text-secondary);
+  text-align: center;
+}
+
+.sched-confirm {
+  justify-content: center;
 }
 
 .layout {
@@ -1044,4 +1124,217 @@
 
 .shorten-btn {
   white-space: nowrap;
+}
+
+/* ── Single channel bar: select + switch versions in one row ── */
+.channel-bar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 14px 0 16px;
+  padding: 0 4px 16px;
+  border-bottom: 1px solid var(--border);
+
+  .apply-all {
+    margin-left: auto;
+    margin-right: 2px;
+    padding: 6px 14px;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    background: transparent;
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all 0.12s ease;
+
+    &:hover {
+      border-color: var(--ink);
+      color: var(--ink);
+    }
+  }
+}
+
+.ch-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 15px 6px 10px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--card);
+  font-family: var(--font-ui);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.13s ease;
+  opacity: 0.55;
+
+  .chip-logo {
+    display: grid;
+    place-items: center;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    color: #fff;
+    font-family: var(--font-mono);
+    font-size: 9.5px;
+    font-weight: 600;
+  }
+
+  &:hover {
+    opacity: 0.85;
+    border-color: var(--text-muted);
+  }
+
+  /* selected but not being edited */
+  &.on {
+    opacity: 1;
+    color: var(--text-primary);
+    border-color: var(--text-muted);
+  }
+
+  /* the version currently in the editor */
+  &.active {
+    background: var(--ink);
+    border-color: var(--ink);
+    color: #fff;
+    box-shadow: 0 2px 8px rgba(16, 20, 24, 0.22);
+  }
+
+  &.over-limit {
+    border-color: var(--danger);
+  }
+}
+
+.chip-count {
+  font-size: 10px;
+  color: var(--text-muted);
+
+  .ch-chip.active & {
+    color: rgba(255, 255, 255, 0.75);
+  }
+
+  &.over {
+    color: var(--danger);
+    font-weight: 700;
+  }
+}
+
+/* ── Mobile layout ── */
+@media (max-width: 640px) {
+  .page-head {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+
+    h1 {
+      font-size: 20px;
+    }
+  }
+
+  /* Head actions: 2-up grid, primary action full width */
+  .head-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+
+    .btn {
+      justify-content: center;
+      white-space: nowrap;
+      padding: 10px 8px;
+      font-size: 13px;
+    }
+
+    .schedule-wrap .btn {
+      width: 100%;
+    }
+
+    > .btn-primary {
+      grid-column: 1 / -1;
+    }
+  }
+
+  /* Popover becomes a fixed, full-width panel — can't overflow or overlap */
+  .schedule-pop {
+    position: fixed;
+    top: 118px;
+    left: 12px;
+    right: 12px;
+    z-index: 130;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+    padding: 14px;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25);
+
+    width: auto;
+
+    .btn {
+      width: 100%;
+      justify-content: center;
+    }
+  }
+
+  /* AI bar stacks */
+  .ai-assist {
+    padding: 14px;
+  }
+
+  .ai-row {
+    flex-direction: column;
+    align-items: stretch;
+
+    .btn {
+      justify-content: center;
+    }
+  }
+
+  /* Composer */
+  .composer {
+    padding: 14px;
+  }
+
+  .channel-bar {
+    gap: 6px;
+
+    .apply-all {
+      margin-left: 0;
+      width: 100%;
+      text-align: center;
+    }
+  }
+
+  .ch-chip {
+    font-size: 12.5px;
+    padding: 5px 13px 5px 8px;
+  }
+
+  .composer-foot {
+    flex-wrap: wrap;
+    gap: 10px;
+
+    .foot-left {
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .foot-right {
+      width: 100%;
+      justify-content: flex-end;
+    }
+  }
+
+  .refine-row {
+    flex-wrap: wrap;
+
+    .btn {
+      width: 100%;
+      justify-content: center;
+    }
+  }
 }
