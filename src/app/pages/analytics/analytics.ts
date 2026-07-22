@@ -1,14 +1,8 @@
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 
-import {
-  AnalyticsApi,
-  AnalyticsResponse,
-  AnalyticsTotal,
-} from '../../services/analytics';
+import { AnalyticsApi, AnalyticsResponse, AnalyticsTotal } from '../../services/analytics';
 import { Toast } from '../../services/toast';
-
-type Metric = 'reach' | 'engagement' | 'followers';
 
 const PLATFORM_META: Record<string, { color: string; abbr: string }> = {
   linkedin: { color: '#0a66c2', abbr: 'in' },
@@ -16,6 +10,7 @@ const PLATFORM_META: Record<string, { color: string; abbr: string }> = {
   instagram: { color: '#e1306c', abbr: 'IG' },
   facebook: { color: '#1877f2', abbr: 'f' },
   youtube: { color: '#ff0000', abbr: 'YT' },
+  threads: { color: '#000000', abbr: 'Th' },
 };
 
 // Chart canvas (viewBox units)
@@ -34,14 +29,8 @@ export class Analytics implements OnInit {
   private toast = inject(Toast);
 
   readonly ranges = [7, 30, 90];
-  readonly metrics: { key: Metric; label: string }[] = [
-    { key: 'reach', label: 'Reach' },
-    { key: 'engagement', label: 'Engagement' },
-    { key: 'followers', label: 'Followers' },
-  ];
 
   readonly days = signal(30);
-  readonly metric = signal<Metric>('reach');
   readonly data = signal<AnalyticsResponse | null>(null);
   readonly isLoading = signal(true);
 
@@ -56,8 +45,7 @@ export class Analytics implements OnInit {
   readonly values = computed<number[]>(() => {
     const d = this.data();
     if (!d) return [];
-    const key = this.metric();
-    return d.series.map((p) => p[key]);
+    return d.series.map((p) => p.published);
   });
 
   readonly maxValue = computed(() => Math.max(...this.values(), 1));
@@ -128,10 +116,6 @@ export class Analytics implements OnInit {
     this.load();
   }
 
-  setMetric(metric: Metric): void {
-    this.metric.set(metric);
-  }
-
   totals(): AnalyticsTotal[] {
     return this.data()?.totals ?? [];
   }
@@ -152,12 +136,7 @@ export class Analytics implements OnInit {
 
   barWidth(value: number): number {
     const platforms = this.data()?.platforms ?? [];
-    const key = this.metric();
-    const max = Math.max(...platforms.map((p) => p[key]), 1);
+    const max = Math.max(...platforms.map((p) => p.posts), 1);
     return Math.max((value / max) * 100, 2);
-  }
-
-  metricValue(p: { reach: number; engagement: number; followers: number }): number {
-    return p[this.metric()];
   }
 }

@@ -3,9 +3,10 @@ import { DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
 import { ApiKeyItem, ApiKeys, KeyProvider } from '../../services/api-keys';
+import { Auth } from '../../services/auth';
 import { BrandApi, BrandTone } from '../../services/brand';
 import { Toast } from '../../services/toast';
-import { UserApi, UserProfile } from '../../services/user';
+import { NotificationPrefs, UserApi, UserProfile } from '../../services/user';
 
 interface ProviderInfo {
   key: KeyProvider;
@@ -33,6 +34,7 @@ export class Settings implements OnInit {
   private userApi = inject(UserApi);
   private keysApi = inject(ApiKeys);
   private brandApi = inject(BrandApi);
+  private auth = inject(Auth);
   private toast = inject(Toast);
 
   readonly providers = PROVIDERS;
@@ -49,6 +51,16 @@ export class Settings implements OnInit {
   readonly savingPassword = signal(false);
   readonly savingBrand = signal(false);
   readonly profile = signal<UserProfile | null>(null);
+  readonly verified = signal<boolean | null>(null);
+  readonly resendingVerify = signal(false);
+  readonly otpMode = signal(false);
+  readonly verifyingOtp = signal(false);
+  otpCode = '';
+
+  // Notification preferences
+  readonly notifyInapp = signal(true);
+  readonly notifyEmail = signal(true);
+  readonly savingNotify = signal(false);
 
   // Brand profile (feeds AI content generation)
   readonly tones: { key: BrandTone; label: string }[] = [
@@ -80,6 +92,11 @@ export class Settings implements OnInit {
   confirmPassword = '';
 
   ngOnInit(): void {
+    this.auth.me().subscribe({
+      next: (user) => this.verified.set(!!user.is_verified),
+      error: () => {},
+    });
+
     this.userApi.getProfile().subscribe({
       next: (profile) => {
         this.profile.set(profile);
@@ -98,6 +115,14 @@ export class Settings implements OnInit {
       error: () => {},
     });
 
+    this.userApi.getNotificationPrefs().subscribe({
+      next: (prefs) => {
+        this.notifyInapp.set(prefs.notify_inapp);
+        this.notifyEmail.set(prefs.notify_email);
+      },
+      error: () => {},
+    });
+
     this.brandApi.get().subscribe({
       next: (brand) => {
         this.brandName = brand.brand_name;
@@ -106,6 +131,81 @@ export class Settings implements OnInit {
         this.brandAudience = brand.audience;
       },
       error: () => {},
+    });
+  }
+
+  /** Flip a notification toggle — saves immediately. */
+  toggleNotify(kind: 'inapp' | 'email'): void {
+    const next: NotificationPrefs = {
+      notify_inapp: kind === 'inapp' ? !this.notifyInapp() : this.notifyInapp(),
+      notify_email: kind === 'email' ? !this.notifyEmail() : this.notifyEmail(),
+    };
+
+    this.savingNotify.set(true);
+    this.userApi.updateNotificationPrefs(next).subscribe({
+      next: (prefs) => {
+        this.savingNotify.set(false);
+        this.notifyInapp.set(prefs.notify_inapp);
+        this.notifyEmail.set(prefs.notify_email);
+        this.toast.success(
+          kind === 'inapp'
+            ? `In-app notifications ${prefs.notify_inapp ? 'on' : 'off'}.`
+            : `Email reminders ${prefs.notify_email ? 'on' : 'off'}.`,
+          'Notifications',
+        );
+      },
+      error: () => {
+        this.savingNotify.set(false);
+        this.toast.error('Could not save the preference. Try again.', 'Notifications');
+      },
+    });
+  }
+
+  /** Chip click: send the 4-digit code and reveal the input. */
+  startVerify(): void {
+    this.otpMode.set(true);
+    this.otpCode = '';
+    this.resendVerify();
+  }
+
+  resendVerify(): void {
+    this.resendingVerify.set(true);
+    this.auth.resendVerification().subscribe({
+      next: (res) => {
+        this.resendingVerify.set(false);
+        this.toast.success(res.message, 'Verify email');
+      },
+      error: () => {
+        this.resendingVerify.set(false);
+        this.toast.error('Could not send the code. Try again.', 'Verify email');
+      },
+    });
+  }
+
+  confirmOtp(): void {
+    const code = this.otpCode.trim();
+    if (code.length !== 4) {
+      this.toast.warning('Enter the 4-digit code from the email.');
+      return;
+    }
+
+    this.verifyingOtp.set(true);
+    this.auth.verifyOtp(code).subscribe({
+      next: (res) => {
+        this.verifyingOtp.set(false);
+        this.otpMode.set(false);
+        this.otpCode = '';
+        this.verified.set(true);
+        this.toast.success(res.message, 'Verified');
+      },
+      error: (error) => {
+        this.verifyingOtp.set(false);
+        const detail =
+          typeof error.error?.detail === 'string'
+            ? error.error.detail
+            : 'Could not verify the code.';
+        this.toast.error(detail, 'Verify email');
+      },
     });
   }
 

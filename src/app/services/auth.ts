@@ -24,6 +24,7 @@ export interface AuthUser {
   id: number;
   name: string;
   email: string;
+  is_verified?: boolean;
 }
 
 @Injectable({
@@ -51,6 +52,22 @@ export class Auth {
     return this.http.get<AuthUser>(`${this.apiUrl}/me`, {
       headers: this.authHeaders(),
     });
+  }
+
+  verifyOtp(code: string): Observable<{ message: string }> {
+    return this.http.post<{ message: string }>(
+      `${this.apiUrl}/verify-otp`,
+      { code },
+      { headers: this.authHeaders() },
+    );
+  }
+
+  resendVerification(): Observable<{ message: string }> {
+    return this.http.post<{ message: string }>(
+      `${this.apiUrl}/resend-verification`,
+      {},
+      { headers: this.authHeaders() },
+    );
   }
 
   logout(): void {

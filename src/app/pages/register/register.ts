@@ -45,7 +45,10 @@ export class Register {
     }).subscribe({
       next: () => {
         this.isLoading = false;
-        this.toast.success('Account created. Welcome!', 'Registered');
+        this.toast.success(
+          'Account created — we emailed you a 4-digit code. Verify it in Settings to enable email reminders.',
+          'Registered',
+        );
         this.router.navigate(['/dashboard']);
       },
       error: (error) => {

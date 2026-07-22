@@ -1,0 +1,33 @@
+<main class="verify-page">
+  <div class="verify-box">
+    <p class="eyebrow">Email confirmation</p>
+
+    @if (state() === 'checking') {
+      <span class="verify-spinner"></span>
+      <h1>Confirming your email…</h1>
+      <p class="verify-msg">One moment.</p>
+    } @else if (state() === 'ok') {
+      <span class="verify-icon ok">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+      </span>
+      <h1>Email confirmed</h1>
+      <p class="verify-msg">{{ message() }}</p>
+      <a class="btn btn-primary" [routerLink]="loggedIn() ? '/dashboard' : '/login'">
+        {{ loggedIn() ? 'Go to dashboard' : 'Sign in' }}
+      </a>
+    } @else {
+      <span class="verify-icon bad">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+      </span>
+      <h1>Link didn't work</h1>
+      <p class="verify-msg">{{ message() }}</p>
+      @if (loggedIn()) {
+        <button class="btn btn-primary" type="button" [disabled]="resending()" (click)="resend()">
+          {{ resending() ? 'Sending…' : 'Send a new link' }}
+        </button>
+      } @else {
+        <a class="btn btn-primary" routerLink="/login">Sign in to resend</a>
+      }
+    }
+  </div>
+</main>

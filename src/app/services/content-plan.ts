@@ -3,12 +3,18 @@ import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 
 import { environment } from '../../environments/environment';
+import { PostResponse } from './post';
 
 export interface PlanItem {
   day: number;
   theme: string;
   title: string;
   done: boolean;
+}
+
+export interface SchedulePlanResult {
+  created: PostResponse[];
+  skipped: number;
 }
 
 export interface ContentPlanResponse {
@@ -37,6 +43,14 @@ export class ContentPlanApi {
 
   list(): Observable<ContentPlanResponse[]> {
     return this.http.get<ContentPlanResponse[]>(this.apiUrl);
+  }
+
+  /** Queue every unposted idea as a scheduled post, starting at startAt (ISO). */
+  schedule(planId: number, startAt: string, platforms: string[]): Observable<SchedulePlanResult> {
+    return this.http.post<SchedulePlanResult>(`${this.apiUrl}/${planId}/schedule`, {
+      start_at: startAt,
+      platforms,
+    });
   }
 
   toggleItem(planId: number, index: number, done: boolean): Observable<ContentPlanResponse> {

@@ -1,7 +1,10 @@
+/* Viewport-locked shell: the sidebar never scrolls away —
+   only the content column scrolls. */
 .shell {
   display: flex;
-  min-height: 100vh;
-  min-height: 100dvh;
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
 }
 
 .main {
@@ -9,6 +12,7 @@
   display: flex;
   flex-direction: column;
   min-width: 0;
+  overflow-y: auto;
 }
 
 .content {

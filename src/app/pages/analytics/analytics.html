@@ -3,7 +3,7 @@
   <div class="page-head">
     <div>
       <p class="eyebrow">Overview</p>
-      <h1>Analytics</h1>
+      <h1>Publishing activity</h1>
     </div>
 
     <div class="range-picker">
@@ -27,33 +27,35 @@
     </div>
   } @else if (!hasData()) {
     <div class="card empty-state">
-      <p class="eyebrow">No analytics yet</p>
-      <h3>Your performance data will appear here</h3>
+      <p class="eyebrow">No activity yet</p>
+      <h3>Your publishing activity will appear here</h3>
       <p>
-        Connect your social channels and publish your first post. Reach,
-        engagement, and follower growth for every channel will start showing
-        up here automatically — check back after your posts go live.
+        Create and publish your first post — how often you post, what's in
+        the queue, and which channels you use most will all show up here.
       </p>
       <div class="empty-actions">
-        <a class="btn btn-primary" routerLink="/social-accounts">Connect channels</a>
-        <a class="btn btn-ghost" routerLink="/create-post">Create a post</a>
+        <a class="btn btn-primary" routerLink="/create-post">Create a post</a>
+        <a class="btn btn-ghost" routerLink="/content-planner">Plan content</a>
       </div>
     </div>
   } @else {
     <!-- Totals -->
     <section class="stats-grid">
       @for (stat of totals(); track stat.key) {
-        <article class="card stat-card" [class.active]="metric() === stat.key" (click)="setMetric(stat.key)">
+        <article class="card stat-card">
           <p class="eyebrow">{{ stat.label }}</p>
           <div class="stat-row">
             <span class="stat-value">{{ format(stat.value) }}</span>
-            <span
-              class="stat-change"
-              [class.up]="stat.change_percent > 0"
-              [class.down]="stat.change_percent < 0"
-            >
-              {{ stat.change_percent > 0 ? '+' : '' }}{{ stat.change_percent }}%
-            </span>
+            @if (stat.key === 'published') {
+              <span
+                class="stat-change"
+                [class.up]="stat.change_percent > 0"
+                [class.down]="stat.change_percent < 0"
+                title="Compared with the previous {{ days() }} days"
+              >
+                {{ stat.change_percent > 0 ? '+' : '' }}{{ stat.change_percent }}%
+              </span>
+            }
           </div>
         </article>
       }
@@ -62,19 +64,7 @@
     <!-- Trend chart -->
     <section class="card chart-panel">
       <div class="panel-head">
-        <h3>Daily trend — last {{ days() }} days</h3>
-        <div class="metric-tabs">
-          @for (m of metrics; track m.key) {
-            <button
-              class="metric-tab"
-              type="button"
-              [class.active]="metric() === m.key"
-              (click)="setMetric(m.key)"
-            >
-              {{ m.label }}
-            </button>
-          }
-        </div>
+        <h3>Posts published per day — last {{ days() }} days</h3>
       </div>
 
       <div class="chart-wrap">
@@ -106,30 +96,34 @@
     <!-- Platform breakdown -->
     <section class="card breakdown">
       <div class="panel-head">
-        <h3>By channel</h3>
-        <span class="mono panel-note">{{ metric() }} · last {{ days() }} days</span>
+        <h3>Posts by channel</h3>
+        <span class="mono panel-note">published · last {{ days() }} days</span>
       </div>
 
-      <ul class="platform-bars">
-        @for (p of data()!.platforms; track p.platform) {
-          <li>
-            <span class="channel-logo" [style.background]="color(p.platform)">{{ abbr(p.platform) }}</span>
-            <div class="bar-block">
-              <div class="bar-head">
-                <strong>{{ p.name }}</strong>
-                <span class="mono">{{ format(metricValue(p)) }}</span>
+      @if (data()!.platforms.length === 0) {
+        <p class="mono panel-note">No published posts in this period yet.</p>
+      } @else {
+        <ul class="platform-bars">
+          @for (p of data()!.platforms; track p.platform) {
+            <li>
+              <span class="channel-logo" [style.background]="color(p.platform)">{{ abbr(p.platform) }}</span>
+              <div class="bar-block">
+                <div class="bar-head">
+                  <strong>{{ p.name }}</strong>
+                  <span class="mono">{{ p.posts }} post{{ p.posts === 1 ? '' : 's' }}</span>
+                </div>
+                <div class="bar-track">
+                  <div
+                    class="bar-fill"
+                    [style.width.%]="barWidth(p.posts)"
+                    [style.background]="color(p.platform)"
+                  ></div>
+                </div>
               </div>
-              <div class="bar-track">
-                <div
-                  class="bar-fill"
-                  [style.width.%]="barWidth(metricValue(p))"
-                  [style.background]="color(p.platform)"
-                ></div>
-              </div>
-            </div>
-          </li>
-        }
-      </ul>
+            </li>
+          }
+        </ul>
+      }
     </section>
   }
 </div>

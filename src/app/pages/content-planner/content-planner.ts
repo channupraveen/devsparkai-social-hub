@@ -1,4 +1,4 @@
-import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { Component, OnDestroy, OnInit, computed, inject, signal } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -8,6 +8,7 @@ import {
   ContentPlanResponse,
   PlanItem,
 } from '../../services/content-plan';
+import { Post, PostResponse } from '../../services/post';
 import { Toast } from '../../services/toast';
 
 interface ThemeGroup {
@@ -21,8 +22,9 @@ interface ThemeGroup {
   templateUrl: './content-planner.html',
   styleUrl: './content-planner.scss',
 })
-export class ContentPlanner implements OnInit {
+export class ContentPlanner implements OnInit, OnDestroy {
   private api = inject(ContentPlanApi);
+  private postApi = inject(Post);
   private toast = inject(Toast);
   private router = inject(Router);
 
@@ -37,6 +39,20 @@ export class ContentPlanner implements OnInit {
   readonly isLoading = signal(true);
   readonly generating = signal(false);
   readonly busyIndex = signal<number | null>(null);
+
+  // ── Plan scheduling ──
+  readonly schedulingId = signal<number | null>(null);
+  readonly scheduleBusy = signal(false);
+  /** Plans queued this session — blocks accidental double-scheduling. */
+  readonly scheduledIds = signal<Set<number>>(new Set());
+  scheduleStart = '';
+  scheduleTime = '09:00';
+
+  /** Scheduled posts — used to show each plan's next due date + countdown. */
+  readonly scheduledPosts = signal<PostResponse[]>([]);
+  readonly now = signal(Date.now());
+  private tick: ReturnType<typeof setInterval> | null = null;
+  private duesNotified = new Set<number>();
 
   readonly activePlan = computed(() =>
     this.plans().find((p) => p.id === this.activePlanId()) ?? null,
@@ -84,6 +100,12 @@ export class ContentPlanner implements OnInit {
   });
 
   ngOnInit(): void {
+    this.loadScheduled();
+    this.tick = setInterval(() => {
+      this.now.set(Date.now());
+      this.checkDue();
+    }, 30000);
+
     this.api.list().subscribe({
       next: (plans) => {
         this.plans.set(plans);
@@ -95,6 +117,56 @@ export class ContentPlanner implements OnInit {
         this.toast.error('Could not load your plans.', 'Content Planner');
       },
     });
+  }
+
+  ngOnDestroy(): void {
+    if (this.tick) clearInterval(this.tick);
+  }
+
+  private loadScheduled(): void {
+    this.postApi.list('scheduled').subscribe({
+      next: (posts) => this.scheduledPosts.set(posts),
+      error: () => {},
+    });
+  }
+
+  /** Earliest scheduled post whose title matches an idea in this plan. */
+  nextDueFor(plan: ContentPlanResponse): PostResponse | null {
+    const titles = new Set(plan.items.map((i) => i.title));
+    const matches = this.scheduledPosts()
+      .filter((p) => p.status === 'scheduled' && p.scheduled_at && titles.has(p.title))
+      .sort((a, b) => a.scheduled_at!.localeCompare(b.scheduled_at!));
+    return matches[0] ?? null;
+  }
+
+  /** Human countdown — re-evaluates as now() ticks. */
+  countdown(dateStr: string): string {
+    const diff = new Date(dateStr).getTime() - this.now();
+    if (diff <= 0) return 'due now';
+    const mins = Math.round(diff / 60000);
+    if (mins < 60) return `in ${mins}m`;
+    const hours = Math.floor(mins / 60);
+    if (hours < 24) return `in ${hours}h ${mins % 60}m`;
+    const days = Math.floor(hours / 24);
+    return `in ${days}d ${hours % 24}h`;
+  }
+
+  /** Toast once when a scheduled post's time arrives. */
+  private checkDue(): void {
+    for (const p of this.scheduledPosts()) {
+      if (
+        p.status === 'scheduled' &&
+        p.scheduled_at &&
+        new Date(p.scheduled_at).getTime() <= this.now() &&
+        !this.duesNotified.has(p.id)
+      ) {
+        this.duesNotified.add(p.id);
+        this.toast.info(
+          `"${p.title}" is due — open it, generate the content, and post.`,
+          'Time to post',
+        );
+      }
+    }
   }
 
   setDays(d: number): void {
@@ -188,6 +260,96 @@ export class ContentPlanner implements OnInit {
     this.router.navigate(['/create-post'], {
       queryParams: { topic: item.title, plan: plan.id, item: index },
     });
+  }
+
+  // ── Schedule the whole plan into the post queue ──
+
+  /** Earliest pickable start — tomorrow, so no past/same-day surprises. */
+  minStartDate(): string {
+    const d = new Date(Date.now() + 24 * 60 * 60 * 1000);
+    const pad = (n: number) => String(n).padStart(2, '0');
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+  }
+
+  /** Queued = any of this plan's ideas already sit in the scheduled queue.
+   *  Survives reloads because it's derived from real posts, not session state. */
+  isQueued(plan: ContentPlanResponse): boolean {
+    return this.scheduledIds().has(plan.id) || this.nextDueFor(plan) !== null;
+  }
+
+  openSchedule(plan: ContentPlanResponse): void {
+    if (this.isQueued(plan)) {
+      this.toast.info('This plan is already queued.');
+      return;
+    }
+    // Default start: tomorrow — keeps Day 1 safely in the future
+    const t = new Date(Date.now() + 24 * 60 * 60 * 1000);
+    const pad = (n: number) => String(n).padStart(2, '0');
+    this.scheduleStart = `${t.getFullYear()}-${pad(t.getMonth() + 1)}-${pad(t.getDate())}`;
+    this.schedulingId.set(this.schedulingId() === plan.id ? null : plan.id);
+  }
+
+  closeSchedule(): void {
+    this.schedulingId.set(null);
+  }
+
+  confirmSchedulePlan(plan: ContentPlanResponse): void {
+    if (!this.scheduleStart || !this.scheduleTime) {
+      this.toast.warning('Pick a start date and time first.');
+      return;
+    }
+
+    // Hard block: typed/pasted past dates bypass the picker's min attribute
+    if (this.scheduleStart < this.minStartDate()) {
+      this.toast.warning('Start date must be tomorrow or later.');
+      return;
+    }
+
+    const pending = plan.items
+      .map((item, index) => ({ item, index }))
+      .filter((e) => !e.item.done);
+
+    if (pending.length === 0) {
+      this.toast.info('Every idea in this plan is already posted.');
+      return;
+    }
+
+    const [y, m, d] = this.scheduleStart.split('-').map(Number);
+    const [hh, mm] = this.scheduleTime.split(':').map(Number);
+    const firstDay = Math.min(...pending.map((e) => e.item.day));
+
+    const dateFor = (day: number) => new Date(y, m - 1, d + (day - firstDay), hh, mm);
+
+    if (dateFor(firstDay).getTime() <= Date.now()) {
+      this.toast.warning('That start time is in the past — pick a future date or time.');
+      return;
+    }
+
+    this.scheduleBusy.set(true);
+    this.api
+      .schedule(plan.id, dateFor(firstDay).toISOString(), ['linkedin', 'x'])
+      .subscribe({
+        next: (res) => {
+          this.scheduleBusy.set(false);
+          this.schedulingId.set(null);
+          this.scheduledIds.update((set) => new Set(set).add(plan.id));
+          this.scheduledPosts.update((list) => [...list, ...res.created]);
+          const skippedNote =
+            res.skipped > 0 ? ` (${res.skipped} already in the queue, skipped)` : '';
+          this.toast.success(
+            `${res.created.length} post${res.created.length === 1 ? '' : 's'} queued${skippedNote} — open each on its day, generate the content, and post.`,
+            'Plan scheduled',
+          );
+        },
+        error: (error) => {
+          this.scheduleBusy.set(false);
+          const detail =
+            typeof error.error?.detail === 'string'
+              ? error.error.detail
+              : 'Could not queue the plan.';
+          this.toast.error(detail, 'Schedule plan');
+        },
+      });
   }
 
   deletePlan(plan: ContentPlanResponse): void {

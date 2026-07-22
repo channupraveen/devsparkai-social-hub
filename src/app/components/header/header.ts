@@ -8,6 +8,7 @@ import {
   signal,
 } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
+import { FormsModule } from '@angular/forms';
 
 import {
   AppNotification,
@@ -15,15 +16,17 @@ import {
 } from '../../services/notifications';
 import { Toast } from '../../services/toast';
 import { LayoutState } from '../../services/layout';
+import { SearchApi, SearchResponse } from '../../services/search';
 
 @Component({
   selector: 'app-header',
-  imports: [RouterLink],
+  imports: [RouterLink, FormsModule],
   templateUrl: './header.html',
   styleUrl: './header.scss',
 })
 export class Header implements OnInit, OnDestroy {
   private api = inject(NotificationsApi);
+  private searchApi = inject(SearchApi);
   private toast = inject(Toast);
   readonly layout = inject(LayoutState);
   private router = inject(Router);
@@ -37,6 +40,13 @@ export class Header implements OnInit, OnDestroy {
   readonly loading = signal(false);
 
   private pollTimer: ReturnType<typeof setInterval> | null = null;
+
+  // ── Global search ──
+  searchQ = '';
+  readonly searchOpen = signal(false);
+  readonly searching = signal(false);
+  readonly results = signal<SearchResponse | null>(null);
+  private searchTimer: ReturnType<typeof setTimeout> | null = null;
 
   ngOnInit(): void {
     this.refreshCount();
@@ -53,9 +63,70 @@ export class Header implements OnInit, OnDestroy {
 
   @HostListener('document:click', ['$event'])
   onDocumentClick(event: MouseEvent): void {
-    if (this.open() && !this.host.nativeElement.contains(event.target)) {
-      this.open.set(false);
+    if (!this.host.nativeElement.contains(event.target)) {
+      if (this.open()) this.open.set(false);
+      if (this.searchOpen()) this.searchOpen.set(false);
     }
+  }
+
+  // ── Global search ──
+
+  onSearchInput(): void {
+    if (this.searchTimer) clearTimeout(this.searchTimer);
+    const q = this.searchQ.trim();
+
+    if (q.length < 2) {
+      this.searchOpen.set(false);
+      this.results.set(null);
+      return;
+    }
+
+    this.searchTimer = setTimeout(() => this.runSearch(q), 250);
+  }
+
+  private runSearch(q: string): void {
+    this.searching.set(true);
+    this.searchOpen.set(true);
+    this.searchApi.search(q).subscribe({
+      next: (res) => {
+        this.searching.set(false);
+        this.results.set(res);
+      },
+      error: () => {
+        this.searching.set(false);
+        this.results.set(null);
+      },
+    });
+  }
+
+  hasResults(): boolean {
+    const r = this.results();
+    return !!r && r.posts.length + r.plans.length + r.accounts.length > 0;
+  }
+
+  closeSearch(): void {
+    this.searchOpen.set(false);
+  }
+
+  clearSearch(): void {
+    this.searchQ = '';
+    this.results.set(null);
+    this.searchOpen.set(false);
+  }
+
+  goPost(id: number): void {
+    this.clearSearch();
+    this.router.navigate(['/create-post'], { queryParams: { id } });
+  }
+
+  goPlans(): void {
+    this.clearSearch();
+    this.router.navigate(['/content-planner']);
+  }
+
+  goAccounts(): void {
+    this.clearSearch();
+    this.router.navigate(['/social-accounts']);
   }
 
   private refreshCount(): void {

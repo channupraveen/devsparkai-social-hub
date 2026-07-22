@@ -95,7 +95,15 @@
 
             <div class="acc-info">
               <strong>{{ p.topic }}</strong>
-              <span class="mono">{{ p.days }}-day plan · {{ planProgress(p) }} posted · {{ p.created_at | date: 'MMM d' }}</span>
+              <span class="mono">
+                {{ p.days }}-day plan · {{ planProgress(p) }} posted · {{ p.created_at | date: 'MMM d' }}
+                @if (nextDueFor(p); as due) {
+                  · next {{ due.scheduled_at | date: 'MMM d, HH:mm' }}
+                  <span class="countdown" [class.due]="countdown(due.scheduled_at!) === 'due now'">
+                    {{ countdown(due.scheduled_at!) }}
+                  </span>
+                }
+              </span>
             </div>
 
             <div class="acc-side">
@@ -103,12 +111,49 @@
                 <div class="mini-fill" [style.width.%]="pct(p)"></div>
               </div>
               <button
+                class="btn btn-primary btn-xs"
+                type="button"
+                [disabled]="isQueued(p)"
+                (click)="$event.stopPropagation(); openSchedule(p)"
+              >
+                {{ isQueued(p) ? 'Queued' : 'Schedule' }}
+              </button>
+              <button
                 class="btn btn-ghost btn-xs danger"
                 type="button"
                 (click)="$event.stopPropagation(); deletePlan(p)"
               >
                 Delete
               </button>
+
+              @if (schedulingId() === p.id) {
+                <div class="sched-pop" (click)="$event.stopPropagation()">
+                  <p class="eyebrow">Queue this plan</p>
+                  <label class="sched-field">
+                    Start date
+                    <input type="date" [min]="minStartDate()" [(ngModel)]="scheduleStart" name="schedStart" />
+                  </label>
+                  <label class="sched-field">
+                    Posting time each day
+                    <input type="time" [(ngModel)]="scheduleTime" name="schedTime" />
+                  </label>
+                  <p class="sched-hint">
+                    Every remaining idea becomes a scheduled post on its day —
+                    generate the content when it's due, then copy &amp; post.
+                  </p>
+                  <div class="sched-actions">
+                    <button class="btn btn-ghost btn-xs" type="button" (click)="closeSchedule()">Cancel</button>
+                    <button
+                      class="btn btn-primary btn-xs"
+                      type="button"
+                      [disabled]="scheduleBusy()"
+                      (click)="confirmSchedulePlan(p)"
+                    >
+                      {{ scheduleBusy() ? 'Queuing...' : 'Queue posts' }}
+                    </button>
+                  </div>
+                </div>
+              }
             </div>
           </div>
 

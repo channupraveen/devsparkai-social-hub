@@ -2,13 +2,13 @@
   <!-- Page head -->
   <div class="page-head">
     <div>
-      <p class="eyebrow">Overview · Last 30 days</p>
+      <p class="eyebrow">Overview</p>
       <h1>Good to see you, {{ firstName() }}</h1>
     </div>
     @if (!isLoading()) {
       <div class="channel-readout">
-        <span class="led" [class.on]="liveCount() > 0"></span>
-        {{ liveCount() }}/{{ platforms().length }} channels live
+        <span class="led" [class.on]="queue().length > 0"></span>
+        {{ queue().length }} post{{ queue().length === 1 ? '' : 's' }} in queue
       </div>
     }
   </div>
@@ -19,22 +19,15 @@
       Loading your dashboard...
     </div>
   } @else {
-    <!-- Stat cards -->
+    <!-- Real workflow counts -->
     <section class="stats-grid">
-      @for (stat of stats(); track stat.key) {
-        <article class="card stat-card">
+      @for (stat of statCards(); track stat.label) {
+        <a class="card stat-card" [routerLink]="stat.link">
           <p class="eyebrow">{{ stat.label }}</p>
           <div class="stat-row">
-            <span class="stat-value">{{ formatValue(stat.value) }}</span>
-            <span
-              class="stat-change"
-              [class.up]="stat.change_percent > 0"
-              [class.down]="stat.change_percent < 0"
-            >
-              {{ stat.change_percent > 0 ? '+' : '' }}{{ stat.change_percent }}%
-            </span>
+            <span class="stat-value">{{ stat.value }}</span>
           </div>
-        </article>
+        </a>
       }
     </section>
 
@@ -43,36 +36,66 @@
       <div class="ai-copy">
         <p class="eyebrow spark">AI Assistant</p>
         <h3>Turn one idea into posts for every platform</h3>
-        <p class="ai-sub">Give it a topic or a blog link. It writes tailored versions for LinkedIn, X, and Instagram — hashtags included.</p>
+        <p class="ai-sub">Give it a topic or a blog link. It writes tailored versions for LinkedIn, X, and Instagram — then copy, paste, and publish in one click.</p>
       </div>
       <a class="btn btn-spark" routerLink="/create-post">Generate posts</a>
     </section>
 
-    <!-- Channels + transmission log -->
+    <!-- Publishing queue + recent posts -->
     <section class="grid-2">
       <article class="card panel">
         <div class="panel-head">
-          <h3>Channels</h3>
-          <a class="panel-link" routerLink="/social-accounts">Manage</a>
+          <h3>Ready to publish</h3>
+          <a class="panel-link" routerLink="/scheduled-posts">View all</a>
         </div>
 
-        <ul class="channel-list">
-          @for (p of platforms(); track p.platform) {
-            <li class="channel-strip">
-              <span class="led" [class.on]="p.connected"></span>
-              <span class="channel-logo" [style.background]="color(p.platform)">{{ abbr(p.platform) }}</span>
-              <div class="channel-info">
-                <strong>{{ p.name }}</strong>
-                <span class="mono">{{ p.connected ? p.handle : 'offline' }}</span>
-              </div>
-              @if (p.connected) {
-                <span class="status-live">Live</span>
-              } @else {
-                <a class="btn btn-ghost btn-xs" routerLink="/social-accounts">Connect</a>
-              }
-            </li>
-          }
-        </ul>
+        @if (queue().length === 0) {
+          <div class="empty-state">
+            <span class="empty-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+            </span>
+            <p>Your queue is empty. Generate content and schedule it — it will line up here, ready to copy and post.</p>
+            <a class="btn btn-primary" routerLink="/create-post">Create a post</a>
+          </div>
+        } @else {
+          <ul class="post-list queue-list">
+            @for (post of queue(); track post.id) {
+              <li [class.busy]="busyId() === post.id">
+                <div class="post-main">
+                  <strong>{{ post.title }}</strong>
+                  <span class="mono">
+                    @if (post.scheduled_at) {
+                      due {{ post.scheduled_at | date: 'MMM d, HH:mm' }}
+                    } @else {
+                      no time set
+                    }
+                  </span>
+                  <div class="pf-actions">
+                    @for (pf of post.platforms; track pf) {
+                      <button
+                        class="pf-chip"
+                        type="button"
+                        [style.background]="color(pf)"
+                        [title]="'Copy text & open ' + pf"
+                        (click)="share(post, pf)"
+                      >
+                        {{ abbr(pf) }}
+                      </button>
+                    }
+                    <button
+                      class="btn btn-ghost btn-xs"
+                      type="button"
+                      [disabled]="busyId() === post.id"
+                      (click)="markPosted(post)"
+                    >
+                      Mark posted
+                    </button>
+                  </div>
+                </div>
+              </li>
+            }
+          </ul>
+        }
       </article>
 
       <article class="card panel">
@@ -81,17 +104,17 @@
           <a class="panel-link" routerLink="/scheduled-posts">View all</a>
         </div>
 
-        @if (recentPosts().length === 0) {
+        @if (recent().length === 0) {
           <div class="empty-state">
             <span class="empty-icon">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2 11 13"/><path d="m22 2-7 20-4-9-9-4 20-7Z"/></svg>
             </span>
-            <p>Nothing published yet. Write your first post and send it to every channel at once.</p>
+            <p>Nothing here yet. Write your first post and send it to every channel.</p>
             <a class="btn btn-primary" routerLink="/create-post">Write your first post</a>
           </div>
         } @else {
           <ul class="post-list">
-            @for (post of recentPosts(); track post.id) {
+            @for (post of recent(); track post.id) {
               <li>
                 <div class="post-main">
                   <strong>{{ post.title }}</strong>

@@ -49,7 +49,6 @@ export class Sidebar implements OnInit {
     {
       title: 'Workspace',
       items: [
-        { label: 'Social Accounts', route: '/social-accounts', icon: 'accounts' },
         { label: 'Team', route: '/team', icon: 'team' },
         { label: 'Settings', route: '/settings', icon: 'settings' },
       ],

@@ -11,6 +11,11 @@ export interface UserProfile {
   created_at: string;
 }
 
+export interface NotificationPrefs {
+  notify_inapp: boolean;
+  notify_email: boolean;
+}
+
 @Injectable({
   providedIn: 'root',
 })
@@ -24,6 +29,14 @@ export class UserApi {
 
   updateProfile(name: string, email: string): Observable<UserProfile> {
     return this.http.put<UserProfile>(`${this.apiUrl}/me`, { name, email });
+  }
+
+  getNotificationPrefs(): Observable<NotificationPrefs> {
+    return this.http.get<NotificationPrefs>(`${this.apiUrl}/me/notifications`);
+  }
+
+  updateNotificationPrefs(prefs: NotificationPrefs): Observable<NotificationPrefs> {
+    return this.http.put<NotificationPrefs>(`${this.apiUrl}/me/notifications`, prefs);
   }
 
   changePassword(currentPassword: string, newPassword: string): Observable<UserProfile> {

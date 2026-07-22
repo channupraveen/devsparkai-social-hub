@@ -5,7 +5,7 @@ import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
 
 export interface AnalyticsTotal {
-  key: 'reach' | 'engagement' | 'followers';
+  key: string;
   label: string;
   value: number;
   change_percent: number;
@@ -13,17 +13,13 @@ export interface AnalyticsTotal {
 
 export interface SeriesPoint {
   date: string;
-  reach: number;
-  engagement: number;
-  followers: number;
+  published: number;
 }
 
 export interface PlatformBreakdown {
   platform: string;
   name: string;
-  reach: number;
-  engagement: number;
-  followers: number;
+  posts: number;
 }
 
 export interface AnalyticsResponse {

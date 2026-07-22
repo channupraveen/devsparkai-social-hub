@@ -44,8 +44,59 @@
         </div>
 
         <div class="field">
-          <label class="eyebrow" for="email">Email</label>
+          <div class="label-row">
+            <label class="eyebrow" for="email">Email</label>
+            @if (verified() === true) {
+              <span class="verify-chip ok" title="This email is confirmed — email reminders are on.">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+                Verified
+              </span>
+            } @else if (verified() === false) {
+              <button
+                class="verify-chip warn"
+                type="button"
+                title="Not confirmed — email reminders are off. Click to get a 4-digit code by email."
+                [disabled]="resendingVerify()"
+                (click)="startVerify()"
+              >
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 8v5"/><path d="M12 16.5h.01"/><circle cx="12" cy="12" r="9"/></svg>
+                {{ resendingVerify() ? 'Sending…' : 'Verify email' }}
+              </button>
+            }
+          </div>
           <input id="email" type="email" name="email" [(ngModel)]="email" />
+
+          @if (otpMode() && verified() === false) {
+            <div class="otp-row">
+              <input
+                class="otp-input"
+                type="text"
+                inputmode="numeric"
+                maxlength="4"
+                placeholder="0000"
+                name="otpCode"
+                [(ngModel)]="otpCode"
+                (keyup.enter)="confirmOtp()"
+              />
+              <button
+                class="btn btn-primary btn-sm"
+                type="button"
+                [disabled]="verifyingOtp()"
+                (click)="confirmOtp()"
+              >
+                {{ verifyingOtp() ? 'Checking…' : 'Confirm' }}
+              </button>
+              <button
+                class="btn btn-ghost btn-sm"
+                type="button"
+                [disabled]="resendingVerify()"
+                (click)="resendVerify()"
+              >
+                Resend
+              </button>
+            </div>
+            <p class="otp-hint mono">Enter the 4-digit code we emailed you — valid for 10 minutes. Can't find it? Check your spam folder.</p>
+          }
         </div>
 
         @if (profile()) {
@@ -98,6 +149,57 @@
             (click)="savePassword()"
           >
             {{ savingPassword() ? 'Saving...' : 'Change password' }}
+          </button>
+        </div>
+      </section>
+
+      <!-- ── Notifications ── -->
+      <section class="card block">
+        <div class="block-head">
+          <div>
+            <h3>Notifications</h3>
+            <p class="block-sub">Where you get pinged when a post is due.</p>
+          </div>
+        </div>
+
+        <div class="notify-row">
+          <div class="notify-info">
+            <strong>In-app notifications</strong>
+            <p>Bell alerts for due, published, and failed posts.</p>
+          </div>
+          <button
+            class="switch"
+            type="button"
+            role="switch"
+            [attr.aria-checked]="notifyInapp()"
+            [class.on]="notifyInapp()"
+            [disabled]="savingNotify()"
+            (click)="toggleNotify('inapp')"
+          >
+            <span class="knob"></span>
+          </button>
+        </div>
+
+        <div class="notify-row">
+          <div class="notify-info">
+            <strong>Email reminders</strong>
+            <p>
+              Due-post emails with your content ready to copy.
+              @if (verified() === false) {
+                <span class="notify-warn">Requires a verified email.</span>
+              }
+            </p>
+          </div>
+          <button
+            class="switch"
+            type="button"
+            role="switch"
+            [attr.aria-checked]="notifyEmail()"
+            [class.on]="notifyEmail()"
+            [disabled]="savingNotify()"
+            (click)="toggleNotify('email')"
+          >
+            <span class="knob"></span>
           </button>
         </div>
       </section>

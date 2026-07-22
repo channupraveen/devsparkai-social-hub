@@ -1,0 +1,75 @@
+.verify-page {
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: var(--paper, #eef1f4);
+  font-family: var(--font-ui, 'Space Grotesk', sans-serif);
+}
+
+.verify-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  width: min(100%, 420px);
+  padding: 40px 28px;
+  text-align: center;
+  background: var(--card, #fff);
+  border: 1px solid var(--border, #dde2e8);
+  border-radius: var(--radius, 10px);
+  box-shadow: 0 1px 2px rgba(16, 20, 24, 0.04), 0 12px 32px rgba(16, 20, 24, 0.07);
+}
+
+h1 {
+  margin: 0;
+  font-size: 21px;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  color: var(--text-primary, #14181d);
+}
+
+.verify-msg {
+  margin: 0 0 8px;
+  max-width: 32ch;
+  color: var(--text-secondary, #5c6470);
+  font-size: 13.5px;
+  line-height: 1.55;
+}
+
+.verify-icon {
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+
+  svg {
+    width: 24px;
+    height: 24px;
+  }
+
+  &.ok {
+    background: rgba(47, 191, 113, 0.14);
+    color: var(--signal, #2fbf71);
+  }
+
+  &.bad {
+    background: rgba(229, 72, 77, 0.12);
+    color: var(--danger, #e5484d);
+  }
+}
+
+.verify-spinner {
+  width: 30px;
+  height: 30px;
+  border: 3px solid var(--border, #dde2e8);
+  border-top-color: var(--ink, #101418);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}

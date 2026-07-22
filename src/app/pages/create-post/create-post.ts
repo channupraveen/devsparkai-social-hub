@@ -542,10 +542,17 @@ export class CreatePost implements OnInit {
     );
   }
 
-  publishNow(): void {
+  /** Manual flow: the user already posted on the platform(s) themselves. */
+  markAsPublished(): void {
     this.mode = 'now';
     this.showSchedulePicker.set(false);
-    this.submit('publish');
+    this.submit('publish', true);
+  }
+
+  /** "I posted it myself" chosen in the not-connected dialog. */
+  confirmMarkPublished(): void {
+    this.showDraftPrompt.set(false);
+    this.markAsPublished();
   }
 
   confirmSchedule(): void {
@@ -608,7 +615,7 @@ export class CreatePost implements OnInit {
     });
   }
 
-  submit(status: 'draft' | 'publish'): void {
+  submit(status: 'draft' | 'publish', manual = false): void {
     if (!this.title.trim()) {
       this.toast.warning('Add a title before saving.');
       return;
@@ -619,7 +626,8 @@ export class CreatePost implements OnInit {
     }
 
     // Block publishing when any channel is over its own limit
-    if (status === 'publish') {
+    // (skipped for manual — the platform already accepted their post)
+    if (status === 'publish' && !manual) {
       const over = this.selectedChannels().filter((c) => this.isOver(c.key));
       if (over.length > 0) {
         const names = over.map((c) => c.name).join(', ');
@@ -633,7 +641,8 @@ export class CreatePost implements OnInit {
     }
 
     // No connected channels — offer to keep the post as a draft instead
-    if (status === 'publish') {
+    // (skipped for manual — they posted without APIs on purpose)
+    if (status === 'publish' && !manual) {
       const connected = this.connectedKeys();
       const unconnected = this.selectedChannels().filter((c) => !connected.has(c.key));
 
@@ -697,7 +706,9 @@ export class CreatePost implements OnInit {
         this.saving.set(false);
         const msg =
           finalStatus === 'published'
-            ? 'Post published to your channels.'
+            ? manual
+              ? 'Marked as published — nice work.'
+              : 'Post published to your channels.'
             : finalStatus === 'scheduled'
               ? 'Post scheduled.'
               : editId !== null
