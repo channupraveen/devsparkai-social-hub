@@ -39,6 +39,12 @@
   display: flex;
   align-items: center;
   gap: 11px;
+  text-decoration: none !important;
+  transition: opacity 0.15s ease;
+
+  &:hover {
+    opacity: 0.82;
+  }
 }
 
 .brand-logo {
@@ -145,6 +151,25 @@ label {
   color: var(--text-primary, #14181d);
   font-size: 13px;
   font-weight: 600;
+}
+
+.forgot-link {
+  justify-self: center;
+  margin-top: 2px;
+  font-family: var(--font-mono, monospace);
+  font-size: 10.5px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-muted, #8b93a0);
+  font-weight: 400;
+  text-decoration: none;
+
+  &:hover {
+    color: var(--ink, #101418);
+    text-decoration: underline;
+    text-decoration-color: var(--spark, #ffd338);
+    text-decoration-thickness: 2px;
+  }
 }
 
 .peek {

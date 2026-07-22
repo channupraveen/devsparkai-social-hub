@@ -68,16 +68,7 @@
 
           @if (otpMode() && verified() === false) {
             <div class="otp-row">
-              <input
-                class="otp-input"
-                type="text"
-                inputmode="numeric"
-                maxlength="4"
-                placeholder="0000"
-                name="otpCode"
-                [(ngModel)]="otpCode"
-                (keyup.enter)="confirmOtp()"
-              />
+              <app-otp-input (codeChange)="otpCode = $event" />
               <button
                 class="btn btn-primary btn-sm"
                 type="button"

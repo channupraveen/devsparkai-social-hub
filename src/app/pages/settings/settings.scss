@@ -369,7 +369,8 @@
 .otp-row {
   display: flex;
   align-items: center;
-  gap: 8px;
+  flex-wrap: wrap;
+  gap: 10px;
   margin-top: 10px;
 }
 

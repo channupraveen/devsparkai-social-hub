@@ -62,6 +62,18 @@ export class Auth {
     );
   }
 
+  forgotPassword(email: string): Observable<{ message: string }> {
+    return this.http.post<{ message: string }>(`${this.apiUrl}/forgot-password`, { email });
+  }
+
+  resetPassword(email: string, code: string, newPassword: string): Observable<{ message: string }> {
+    return this.http.post<{ message: string }>(`${this.apiUrl}/reset-password`, {
+      email,
+      code,
+      new_password: newPassword,
+    });
+  }
+
   resendVerification(): Observable<{ message: string }> {
     return this.http.post<{ message: string }>(
       `${this.apiUrl}/resend-verification`,

@@ -7,6 +7,7 @@ import { Auth } from '../../services/auth';
 import { BrandApi, BrandTone } from '../../services/brand';
 import { Toast } from '../../services/toast';
 import { NotificationPrefs, UserApi, UserProfile } from '../../services/user';
+import { OtpInput } from '../../components/otp-input/otp-input';
 
 interface ProviderInfo {
   key: KeyProvider;
@@ -26,7 +27,7 @@ type SettingsTab = 'account' | 'brand' | 'ai';
 
 @Component({
   selector: 'app-settings',
-  imports: [FormsModule, DatePipe],
+  imports: [FormsModule, DatePipe, OtpInput],
   templateUrl: './settings.html',
   styleUrl: './settings.scss',
 })

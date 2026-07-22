@@ -8,6 +8,7 @@ import { ContentCalendar } from './pages/content-calendar/content-calendar';
 import { ContentPlanner } from './pages/content-planner/content-planner';
 import { CreatePost } from './pages/create-post/create-post';
 import { Dashboard } from './pages/dashboard/dashboard';
+import { ForgotPassword } from './pages/forgot-password/forgot-password';
 import { Login } from './pages/login/login';
 import { Register } from './pages/register/register';
 import { ScheduledPosts } from './pages/scheduled-posts/scheduled-posts';
@@ -86,6 +87,11 @@ export const routes: Routes = [
         path: 'register',
         component: Register,
         title: 'Register | DevSparkAI Social Hub',
+      },
+      {
+        path: 'forgot-password',
+        component: ForgotPassword,
+        title: 'Reset Password | DevSparkAI Social Hub',
       },
     ],
   },
