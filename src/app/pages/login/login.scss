@@ -6,7 +6,12 @@
   display: grid;
   place-items: center;
   padding: 20px;
-  background: var(--paper, #eef1f4);
+  /* console dot-grid + a soft warm glow behind the card */
+  background:
+    radial-gradient(rgba(16, 20, 24, 0.055) 1px, transparent 1.1px) 0 0 / 22px 22px,
+    radial-gradient(640px 460px at 50% 30%, rgba(226, 83, 45, 0.07), transparent 70%),
+    radial-gradient(520px 380px at 12% 92%, rgba(255, 211, 56, 0.12), transparent 65%),
+    var(--paper, #eef1f4);
   font-family: var(--font-ui, 'Space Grotesk', sans-serif);
 }
 
@@ -237,6 +242,115 @@ a {
 
   &:hover {
     text-decoration-color: var(--ink, #101418);
+  }
+}
+
+/* ── Motion ── */
+@keyframes card-in {
+  from {
+    opacity: 0;
+    transform: translateY(18px) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes dot-pulse {
+  50% {
+    box-shadow: 0 0 0 5px rgba(47, 191, 113, 0.16);
+  }
+}
+
+@keyframes logo-spark {
+  0%, 100% {
+    transform: scale(1) rotate(0deg);
+  }
+  50% {
+    transform: scale(1.12) rotate(10deg);
+  }
+}
+
+.auth-box {
+  animation: card-in 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.auth-body .eyebrow {
+  animation: fade-up 0.45s ease 0.12s both;
+}
+
+.auth-body h1 {
+  animation: fade-up 0.45s ease 0.18s both;
+}
+
+.lede {
+  animation: fade-up 0.45s ease 0.22s both;
+}
+
+.auth-form .field:nth-of-type(1) {
+  animation: fade-up 0.45s ease 0.28s both;
+}
+
+.auth-form .field:nth-of-type(2) {
+  animation: fade-up 0.45s ease 0.34s both;
+}
+
+.auth-form .field:nth-of-type(3) {
+  animation: fade-up 0.45s ease 0.4s both;
+}
+
+.submit-btn {
+  animation: fade-up 0.45s ease 0.46s both;
+  transition: background 0.15s ease, color 0.15s ease, transform 0.15s ease,
+    box-shadow 0.15s ease;
+
+  &:hover:not(:disabled) {
+    transform: translateY(-1.5px);
+    box-shadow: 0 8px 20px rgba(16, 20, 24, 0.16);
+  }
+
+  &:active:not(:disabled) {
+    transform: translateY(0) scale(0.995);
+    box-shadow: none;
+  }
+}
+
+.auth-foot {
+  animation: fade-up 0.45s ease 0.52s both;
+}
+
+.error-message {
+  animation: fade-up 0.3s ease both;
+}
+
+.status-dot {
+  animation: dot-pulse 2.4s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .auth-box,
+  .auth-body .eyebrow,
+  .auth-body h1,
+  .lede,
+  .auth-form .field,
+  .submit-btn,
+  .auth-foot,
+  .error-message,
+  .brand-logo,
+  .status-dot {
+    animation: none;
   }
 }
 
