@@ -756,9 +756,10 @@ export class CreatePost implements OnInit {
       }
     }
 
-    // No connected channels — offer to keep the post as a draft instead
-    // (skipped for manual — they posted without APIs on purpose)
-    if (status === 'publish' && !manual) {
+    // No connected channels — offer to keep the post as a draft instead.
+    // Only relevant for "publish now"; scheduling just queues for manual
+    // posting later, and manual mark-as-published skips it too.
+    if (status === 'publish' && !manual && this.mode === 'now') {
       const connected = this.connectedKeys();
       const unconnected = this.selectedChannels().filter((c) => !connected.has(c.key));
 
