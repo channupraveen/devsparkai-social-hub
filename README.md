@@ -1,59 +1,240 @@
-# DevsparkaiSocialHub
+# DevSparkAI Social Hub — Frontend
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 21.2.19.
+**AI-powered social media management dashboard built with Angular 21.**
 
-## Development server
+DevSparkAI Social Hub is a product-focused SaaS application for creating, planning, scheduling and analysing social content from one workspace.
 
-To start a local development server, run:
+Live application: https://socialhub.devsparkai.com
 
-```bash
-ng serve
+Backend: [devsparkai-social-hub-backend](https://github.com/channupraveen/devsparkai-social-hub-backend)
+
+---
+
+## Product
+
+The goal is to reduce the repetitive work involved in maintaining a consistent social presence.
+
+The application combines:
+
+- AI-assisted content generation
+- Platform-specific content variants
+- Content planning
+- Post creation and scheduling
+- Social account connections
+- Analytics
+- Brand profiles
+- Team management
+
+The interface is designed around a single authenticated workspace rather than separate tools for each social platform.
+
+---
+
+## Main screens
+
+| Area | Purpose |
+|---|---|
+| Dashboard | Overview of content activity and connected channels |
+| Content Planner | Generate a day-by-day content plan from a topic and duration |
+| Create Post | Create, edit and prepare platform-specific content |
+| Content Calendar | View planned content by date |
+| Scheduled Posts | Manage upcoming and scheduled content |
+| Analytics | Review reach, engagement and follower trends |
+| Social Accounts | Connect and manage publishing channels |
+| Team | Manage workspace members |
+| Settings | Configure AI providers and brand profile |
+
+---
+
+## Frontend architecture
+
+The application uses Angular routing, standalone components, route guards and HTTP interceptors.
+
+```text
+Angular Application
+│
+├── Auth Layout
+│   ├── Login
+│   ├── Register
+│   └── Forgot Password
+│
+└── Main Layout
+    ├── Dashboard
+    ├── Content Planner
+    ├── Create Post
+    ├── Content Calendar
+    ├── Scheduled Posts
+    ├── Analytics
+    ├── Social Accounts
+    ├── Team
+    └── Settings
+             │
+             ▼
+       HTTP Services
+             │
+             ▼
+      FastAPI Backend
 ```
 
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
+### Authentication flow
 
-## Code scaffolding
-
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
-
-```bash
-ng generate component component-name
+```text
+Login / Register
+       │
+       ▼
+     JWT
+       │
+       ▼
+Auth Interceptor
+       │
+       ▼
+Authenticated API requests
+       │
+       ▼
+FastAPI
 ```
 
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
+Protected application routes use an authentication guard, while the HTTP interceptor attaches authentication information to API requests.
 
-```bash
-ng generate --help
+---
+
+## AI content workflow
+
+The frontend supports a workflow where a user provides a topic and content requirements, then receives platform-specific variants.
+
+```text
+Topic + duration / instructions
+             │
+             ▼
+       Content Planner
+             │
+             ▼
+        FastAPI API
+             │
+             ▼
+       AI provider
+             │
+             ▼
+Platform-specific variants
+             │
+             ▼
+ Edit → Schedule → Publish
 ```
 
-## Building
+Supported content destinations include LinkedIn, X, Instagram, Facebook and YouTube at the content-generation layer.
 
-To build the project run:
+---
 
-```bash
-ng build
+## Technology stack
+
+| Category | Technology |
+|---|---|
+| Framework | Angular 21 |
+| Language | TypeScript |
+| Reactive APIs | RxJS |
+| Routing | Angular Router |
+| HTTP | Angular HttpClient |
+| Authentication | JWT + route guard + interceptor |
+| Testing | Vitest |
+| Package manager | npm |
+
+---
+
+## Project structure
+
+```text
+src/app/
+├── guards/          # Authentication guards
+├── interceptors/    # HTTP authentication interceptor
+├── layouts/         # Auth and application layouts
+├── pages/
+│   ├── dashboard/
+│   ├── content-planner/
+│   ├── create-post/
+│   ├── content-calendar/
+│   ├── scheduled-posts/
+│   ├── analytics/
+│   ├── social-accounts/
+│   ├── team/
+│   └── settings/
+├── services/        # API/application services
+└── app.routes.ts    # Application routing
 ```
 
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
+---
 
-## Running unit tests
+## Local development
 
-To execute unit tests with the [Vitest](https://vitest.dev/) test runner, use the following command:
+### Requirements
 
-```bash
-ng test
-```
+- Node.js
+- npm 10+
+- Angular CLI 21
 
-## Running end-to-end tests
-
-For end-to-end (e2e) testing, run:
+### Install
 
 ```bash
-ng e2e
+git clone https://github.com/channupraveen/devsparkai-social-hub.git
+cd devsparkai-social-hub
+npm install
 ```
 
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
+### Start
 
-## Additional Resources
+```bash
+npm start
+```
 
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+Open:
+
+```text
+http://localhost:4200
+```
+
+### Build
+
+```bash
+npm run build
+```
+
+### Tests
+
+```bash
+npm test
+```
+
+---
+
+## Backend
+
+The frontend communicates with a FastAPI backend responsible for authentication, AI generation, posts, scheduling, social OAuth, analytics and workspace data.
+
+See the backend repository for API setup and architecture.
+
+---
+
+## Engineering highlights
+
+This project demonstrates:
+
+- Building a complete SaaS dashboard with Angular
+- Authenticated routing and HTTP interception
+- AI-assisted product workflows
+- Complex content-management UI
+- Calendar and scheduling experiences
+- Analytics-oriented interfaces
+- Separation between frontend presentation and backend business logic
+- Integration with a FastAPI API
+
+---
+
+## Author
+
+**Praveen Kumar**
+
+GitHub: https://github.com/channupraveen
+
+Part of the DevSparkAI product ecosystem.
+
+## License
+
+MIT
